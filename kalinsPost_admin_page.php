@@ -472,8 +472,9 @@ if($versionNum < 5){//I have no idea what this thing will do at anything below 5
  
  <p><input type='checkbox' id='chkDoCleanup' name='chkDoCleanup' <?php if($adminOptions["doCleanup"] == "true"){echo "checked='yes' ";} ?>></input> Upon plugin deactivation clean up all database entries. (Save any preset to change this value)</p>
  
-<p>Kalin's Easy Edit Links was built with WordPress version 3.0. It has NOT been tested on older versions and might fail.</p>
+<p>Kalin's Post List was built with WordPress version 3.0. It has NOT been tested on older versions and might fail.</p>
 <p>You may also like <a href="http://kalinbooks.com/pdf-creation-station/">Kalin's PDF Creation Station WordPress Plugin</a> - <br /> Create highly customizable PDF documents from any combination of pages and posts, or add a link to generate a PDF on each individual page or post.</p>
+
 
 
 </html>
