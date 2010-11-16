@@ -313,7 +313,7 @@
 
 
 
-<!--
+
 
 <h2>Kalin's Post List - settings</h2>
 
@@ -321,7 +321,7 @@
 
 <p><a href="http://kalinbooks.com/post-list-wordpress-plugin/">Plugin Page</a></p>
 
--->
+
 
 <br/><hr/><br/>
 
