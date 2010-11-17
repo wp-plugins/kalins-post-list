@@ -5,7 +5,7 @@
   <li><strong>Top Row Options</strong><br />
     <ol>
     <li><strong>Post Type:</strong> Choose to show pages, posts, attachments or everything.</li>
-    <li><strong>Show Count: </strong>The number of items that will be shown. Be sure to only insert integer numbers here.</li>
+    <li><strong>Show Count: </strong>The number of items that will be shown. Be sure to only insert integer numbers here. Use -1 (negative one) for no limit.</li>
     <li><strong>Order by:</strong> Choose from 16 different ways to order the posts,  then select ascending or descending. These will often affect which posts are actually shown, as well as their order.</li>
     </ol>
   </li>
@@ -34,6 +34,9 @@
   </li>
   <li>
   <strong>Restore Preset Defaults:</strong> To restore your original presets, click "Restore Preset Defaults" under the preset list. This will restore your original presets, overwriting any changes you have made to them. This will not, however, delete any new presets you've created using unique names.
+  </li>
+  <li>
+  <strong>PHP code:</strong> For folks with a working knowledge of PHP or themes. When you click load on any preset, it will generate a simple PHP snippet that you can insert anywhere into your theme. Don't forget the opening and closing PHP tags.
   </li>
   </ol>
   </li>

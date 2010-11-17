@@ -154,6 +154,8 @@
 			}
 			
 			$('#txtPresetName').val(id);
+			
+			$('#presetPHP').html('PHP code: <code>kalinsPost_show("' + id + '");</code>');
 		}
 		
 		function buildPresetTable(){//build the file table - we build it all in javascript so we can simply rebuild it whenever an entry is added through ajax
@@ -234,7 +236,7 @@
 			data.doCleanup = $("#chkDoCleanup").is(':checked');
 			
 			
-			
+			$('#presetPHP').html('PHP code: <code>kalinsPost_show("' + data.preset_name + '");</code>');
 			
 			
 			$('#createStatus').html("Saving to preset...");
@@ -429,12 +431,20 @@ Order by: <select id="cboOrderby" style="width:110px;" id="cboType">
 </span>
 </p>
 
+
+
 <p>
-<div id="presetListDiv" class="wtf">
-</div>
+	<div id="presetListDiv">
+	</div>
 </p>
 
-<p><button id="btnRestorePreset">Restore Preset Defaults</button></p>
+<p><button id="btnRestorePreset">Restore Preset Defaults</button></p><br/>
+
+<p>
+	<div id="presetPHP">
+	PHP code - click load on any preset to generate PHP code for use in your theme
+	</div>
+</p>
 
 <br/><hr/><br/>
 		<p>
@@ -474,6 +484,7 @@ if($versionNum < 5){//I have no idea what this thing will do at anything below 5
  
 <p>Kalin's Post List was built with WordPress version 3.0. It has NOT been tested on older versions and might fail.</p>
 <p>You may also like <a href="http://kalinbooks.com/pdf-creation-station/">Kalin's PDF Creation Station WordPress Plugin</a> - <br /> Create highly customizable PDF documents from any combination of pages and posts, or add a link to generate a PDF on each individual page or post.</p>
+<p>Or <a href="http://kalinbooks.com/easy-edit-links-wordpress-plugin/">Kalin's Easy Edit Links</a> - <br />  Adds a box to your page/post edit screen with links and edit buttons for all pages, posts, tags, categories, and links for convenient linking and editing.</p>
 
 
 

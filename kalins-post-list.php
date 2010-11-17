@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Kalin's Post List
-Version: 0.7
+Version: 1.0
 Plugin URI: http://kalinbooks.com/post-list-wordpress-plugin/
-Description: Creates a shortcode for placing highly customizable lists of posts into your post content or your theme.
+Description: Creates a shortcode or PHP snippet for placing highly customizable lists of posts into your post content or your theme.
 Author: Kalin Ringkvist
 Author URI: http://kalinbooks.com/
 
@@ -235,7 +235,7 @@ function kalinsPost_init(){
 }
 
 function kalinsPostinternalShortcodeReplace($str, $page, $count){
-	$SCList =  array("[ID]", "[post_date]", "[post_date_gmt]", "[post_title]", "[post_excerpt]", "[post_name]", "[post_modified]", "[post_modified_gmt]", "[guid]", "[comment_count]", "[post_content]");
+	$SCList =  array("[ID]", "[post_date]", "[post_date_gmt]", "[post_title]", "[post_name]", "[post_modified]", "[post_modified_gmt]", "[guid]", "[comment_count]", "[post_content]");
 	
 	$l = count($SCList);
 	for($i = 0; $i<$l; $i++){//loop through all possible shortcodes
@@ -247,20 +247,30 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 	$str = str_replace("[post_permalink]", get_permalink( $page->ID ), $str);
 	$str = str_replace("[item_number]", $count, $str);
 	
-	//{item_number}
 	
+	if($page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
+		$str = str_replace("[post_excerpt]", wp_trim_excerpt($page->post_content), $str);
+	}else{
+		$str = str_replace("[post_excerpt]", $page->post_excerpt, $str);
+	}
 	
-	
-	//$str = str_replace("{post_categories}", get_the_category( $page->ID ) , $str);
 	
 	return $str;
 }
 
-function kalinsPost_shortcode($atts) {
+function kalinsPost_shortcode($atts){
+	return kalinsPost_execute($atts['preset']);
+}
+
+function kalinsPost_show($preset){
+	echo kalinsPost_execute($preset);
+}
+
+function kalinsPost_execute($preset) {
 	
 	$adminOptions = kalinsPost_get_admin_options();
 	$presetObj = json_decode($adminOptions['preset_arr']);
-	$newVals = $presetObj->$atts['preset'];
+	$newVals = $presetObj->$preset;
 	$excludeList = "";
 	
 	global $post;

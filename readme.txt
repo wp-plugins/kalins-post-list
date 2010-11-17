@@ -5,12 +5,12 @@ Requires at least: 3.0
 Tested up to: 3.0.1
 Stable tag: trunk
 
-Creates a shortcode for inserting dynamic, highly customizable lists of posts or pages into your post content.
+Creates a shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages into your post content or theme.
 
 == Description ==
 
 <p>
-Creates a shortcode for inserting dynamic, highly customizable lists of posts or pages into your post content.             
+Creates a shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages into your post content or theme.           
 </p>
 
 <p>
@@ -39,10 +39,17 @@ Note: May require PHP 5.2 and Wordpress 3.0 (hasn't been tested on older version
 = 0.7 =
 * First version. Beta. 
 
+= 1.0 =
+*fixed post_excerpt internal shortcode
+*added PHP snippet generation
+
 == Upgrade Notice ==
 
 = 0.7 =
 First version. Beta.
+
+= 1.0 =
+post_excerpt shortcode should work properly now and anyone familiar with themes or PHP can now insert a simple auto-generated PHP snippet into their theme
 
 
 == About ==
