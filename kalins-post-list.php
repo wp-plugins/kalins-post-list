@@ -248,10 +248,19 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 	$str = str_replace("[item_number]", $count, $str);
 	
 	
-	if($page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
-		$str = str_replace("[post_excerpt]", wp_trim_excerpt($page->post_content), $str);
-	}else{
-		$str = str_replace("[post_excerpt]", $page->post_excerpt, $str);
+	//not sure why wp_trim_excerpt(); doesn't work anymore
+	if(strpos($str, "[post_excerpt]")){
+		if($page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
+			$pageContent = strip_tags($page->post_content);
+			if(strlen($pageContent) <= 250) {
+				$str = str_replace("[post_excerpt]", $pageContent, $str);
+			}else{
+				
+				$str = str_replace("[post_excerpt]", substr($pageContent, 0, 250) ."...", $str);
+			}
+		}else{
+			$str = str_replace("[post_excerpt]", $page->post_excerpt, $str);
+		}
 	}
 	
 	
