@@ -51,6 +51,9 @@ First version. Beta.
 = 1.0 =
 post_excerpt shortcode should work properly now and anyone familiar with themes or PHP can now insert a simple auto-generated PHP snippet into their theme
 
+= 1.0.1 =
+*Bug fix. This plugin no longer destroys all other admin help menus.
+
 
 == About ==
 

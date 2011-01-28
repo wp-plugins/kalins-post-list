@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Kalin's Post List
-Version: 1.0
+Version: 1.0.1
 Plugin URI: http://kalinbooks.com/post-list-wordpress-plugin/
 Description: Creates a shortcode or PHP snippet for placing highly customizable lists of posts into your post content or your theme.
 Author: Kalin Ringkvist
@@ -40,7 +40,7 @@ function kalinsPost_admin_page() {//load php that builds our admin page
 }
 
 function kalinsPost_admin_init(){
-	add_action('contextual_help', 'kalinsPost_contextual_help', 10, 2);
+	//add_action('contextual_help', 'kalinsPost_contextual_help', 10, 2);
 	
 	register_deactivation_hook( __FILE__, 'kalinsPost_cleanup' );
 	
@@ -158,15 +158,25 @@ function kalinsPost_restore_preset(){
 
 function kalinsPost_configure_pages() {
 	
-	$mypage = add_submenu_page('options-general.php', "Kalin's Post List", "Kalin's Post List", 'manage_options', __FILE__, 'kalinsPost_admin_page');
+	//$mypage = add_submenu_page('options-general.php', "Kalin's Post List", "Kalin's Post List", 'manage_options', __FILE__, 'kalinsPost_admin_page');
 	
 	//$mytool = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalinsPost_tool_page');
 	
-	add_action( "admin_print_scripts-$mypage", 'kalinsPost_admin_head' );
+	global $kalinsPost_hook;
+	
+	$kalinsPost_hook = add_submenu_page('options-general.php', "Kalin's Post List", "Kalin's Post List", 'manage_options', "Kalins-Post-List", 'kalinsPost_admin_page');
+	
+	//$mytool = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalinsPost_tool_page');
+	
+	add_action( "admin_print_scripts-$kalinsPost_hook", 'kalinsPost_admin_head' );
+	
+	add_action( "admin_print_scripts-$kalinsPost_hook", 'kalinsPost_admin_head' );
 	//add_action('admin_print_styles-' . $mypage, 'kalinsPost_admin_styles');
 	
 	//add_action( "admin_print_scripts-$mytool", 'kalinsPost_admin_head' );
 	//add_action('admin_print_styles-' . $mytool, 'kalinsPost_admin_styles');
+	
+	add_filter('contextual_help', 'kalinsPost_contextual_help', 10, 3);
 }
 
 function kalinsPost_admin_head() {
@@ -185,11 +195,22 @@ function kalinsPost_inner_custom_box($post) {//creates the box that goes on the 
 }
 
 
-function kalinsPost_contextual_help($text, $screen) {
+/*function kalinsPost_contextual_help($text, $screen) {
 	if (strcmp($screen, 'settings_page_kalins-post-list/kalins-post-list') == 0 ) {//if we're on settings page, add setting help and return
 		require_once( WP_PLUGIN_DIR . '/kalins-post-list/kalins_post_admin_help.php');
 		return;
 	}
+}*/
+
+function kalinsPost_contextual_help($contextual_help, $screen_id, $screen) {
+	global $kalinsPost_hook;
+	if($screen_id == $kalinsPost_hook){
+		//$contextual_help = __FILE__;//DOMDocument::loadHTMLFile("kalins_post_admin_help.html");//require_once( WP_PLUGIN_DIR . '/kalins-post-list/kalins_post_admin_help.php');
+		
+		$helpFile = DOMDocument::loadHTMLFile(WP_PLUGIN_DIR . '/kalins-post-list/kalins_post_admin_help.html');
+		$contextual_help = $helpFile->saveHTML();
+	}
+	return $contextual_help;
 }
 
 function kalinsPost_get_admin_options() {
