@@ -529,7 +529,7 @@ Parent: <select id="cboParent" style="width:110px;">
 
 <br/><hr/><br/>
     
-<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest features, visit my <a href="http://kalinbooks.com/post-list-wordpress-plugin" target="_blank">plugin page</a>. If you have a cool example of Kalin's Post LIst in use, post a reply/link on my <a href="http://kalinbooks.com/post-list-wordpress-plugin/examples/">examples page.</a> If you find this plugin useful, please consider <A href="http://wordpress.org/extend/plugins/kalins-post-list/">rating this plugin on WordPress.org</A> or making a PayPal donation:</p>
+<p>Thank you for using Kalin's Post List. To report bugs, request help or suggest features, visit my <a href="http://kalinbooks.com/post-list-wordpress-plugin" target="_blank">plugin page</a>. If you have a cool example of Kalin's Post LIst in use, post a reply/link on my <a href="http://kalinbooks.com/post-list-wordpress-plugin/examples/">examples page.</a> If you find this plugin useful, please consider <A href="http://wordpress.org/extend/plugins/kalins-post-list/">rating this plugin on WordPress.org</A> or making a PayPal donation:</p>
 
 <p>
 
