@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Kalin's Post List
-Version: 1.0.1
+Version: 2.0
 Plugin URI: http://kalinbooks.com/post-list-wordpress-plugin/
-Description: Creates a shortcode or PHP snippet for placing highly customizable lists of posts into your post content or your theme.
+Description: Creates a shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.
 Author: Kalin Ringkvist
 Author URI: http://kalinbooks.com/
 
@@ -40,7 +40,7 @@ function kalinsPost_admin_page() {//load php that builds our admin page
 }
 
 function kalinsPost_admin_init(){
-	//add_action('contextual_help', 'kalinsPost_contextual_help', 10, 2);
+	//add_action('contextual_help', 'kalinsPost_contextual_help', 10, 3);
 	
 	register_deactivation_hook( __FILE__, 'kalinsPost_cleanup' );
 	
@@ -53,8 +53,6 @@ function kalinsPost_admin_init(){
 	add_action('wp_ajax_kalinsPost_save_preset', 'kalinsPost_save_preset');
 	add_action('wp_ajax_kalinsPost_delete_preset', 'kalinsPost_delete_preset');//kalinsPost_restore_preset
 	add_action('wp_ajax_kalinsPost_restore_preset', 'kalinsPost_restore_preset');
-	
-	
 }
 
 //205
@@ -81,6 +79,8 @@ function kalinsPost_save_preset(){
 	$valObj['content'] = stripslashes($_POST['content']);
 	$valObj['after'] = stripslashes($_POST['after']);
 	$valObj['excludeCurrent'] = $_POST['excludeCurrent'];
+	
+	$valObj['post_parent'] = $_POST['post_parent'];
 	
 	$valObj['includeCats'] = $_POST['includeCats'];
 	$valObj['includeTags'] = $_POST['includeTags'];
@@ -129,38 +129,19 @@ function kalinsPost_restore_preset(){
 	$userValArr = json_decode($kalinsPostAdminOptions['preset_arr']);
 	$defValArr = json_decode($defaultAdminOptions['preset_arr']);
 	
-	//echo $defaultAdminOptions['preset_arr'];
-	
-	//echo $defaultAdminOptions['preset_arr'];
-	
-	//return;
-	
-	//echo $defValArr -> fullContent;
-	
 	foreach ($defValArr as $key => $value){
 		$userValArr->$key = $value;
 	}
-	
-	/*
-	for($i in $defValArr){
-		$userValArr->$i = $defValArr->$i;
-	}
-	*/
 	
 	$kalinsPostAdminOptions['preset_arr'] = json_encode($userValArr);
 	
 	update_option(KALINSPOST_ADMIN_OPTIONS_NAME, $kalinsPostAdminOptions);//save options to database
 	
 	echo $kalinsPostAdminOptions['preset_arr'];
-	
 }
 
 
 function kalinsPost_configure_pages() {
-	
-	//$mypage = add_submenu_page('options-general.php', "Kalin's Post List", "Kalin's Post List", 'manage_options', __FILE__, 'kalinsPost_admin_page');
-	
-	//$mytool = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalinsPost_tool_page');
 	
 	global $kalinsPost_hook;
 	
@@ -170,13 +151,16 @@ function kalinsPost_configure_pages() {
 	
 	add_action( "admin_print_scripts-$kalinsPost_hook", 'kalinsPost_admin_head' );
 	
-	add_action( "admin_print_scripts-$kalinsPost_hook", 'kalinsPost_admin_head' );
+	//add_action('contextual_help', 'kalinsPost_contextual_help', 10, 0);
+	
+	//add_contextual_help( $mypage, "Hello baby why is this hapening?" );
+	
+	add_filter('contextual_help', 'kalinsPost_contextual_help', 10, 3);
+	
 	//add_action('admin_print_styles-' . $mypage, 'kalinsPost_admin_styles');
 	
 	//add_action( "admin_print_scripts-$mytool", 'kalinsPost_admin_head' );
 	//add_action('admin_print_styles-' . $mytool, 'kalinsPost_admin_styles');
-	
-	add_filter('contextual_help', 'kalinsPost_contextual_help', 10, 3);
 }
 
 function kalinsPost_admin_head() {
@@ -193,14 +177,6 @@ function kalinsPost_admin_head() {
 function kalinsPost_inner_custom_box($post) {//creates the box that goes on the post/page edit page
 	require_once( WP_PLUGIN_DIR . '/kalins-edit-links/kalinsPost_custom_box.php');
 }
-
-
-/*function kalinsPost_contextual_help($text, $screen) {
-	if (strcmp($screen, 'settings_page_kalins-post-list/kalins-post-list') == 0 ) {//if we're on settings page, add setting help and return
-		require_once( WP_PLUGIN_DIR . '/kalins-post-list/kalins_post_admin_help.php');
-		return;
-	}
-}*/
 
 function kalinsPost_contextual_help($contextual_help, $screen_id, $screen) {
 	global $kalinsPost_hook;
@@ -233,7 +209,6 @@ function kalinsPost_getAdminSettings(){//simply returns all our default option v
 	
 	$kalinsPostAdminOptions = array();
 	
-	
 	$kalinsPostAdminOptions['preset_arr'] = '{"pageContentDivided_5":{"categories":"","tags":"","post_type":"page","orderby":"menu_order","order":"ASC","numberposts":"5","before":"<p><hr\/>","content":"<a href=\"[post_permalink]\">[post_title]<\/a> by [post_author] - [post_date]<br\/>[post_content]<hr\/>","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"postExcerptDivided_5":{"categories":"","tags":"","post_type":"post","orderby":"post_date","order":"DESC","numberposts":"5","before":"<p><hr\/>","content":"<a href=\"[post_permalink]\">[post_title]<\/a> by [post_author] - [post_date]<br\/>[post_excerpt]<hr\/>","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"simpleAttachmentList_10":{"categories":"","tags":"","post_type":"attachment","orderby":"post_date","order":"DESC","numberposts":"10","before":"<ul>","content":"<li><a href=\"[post_permalink]\">[post_title]<\/a><\/li>","after":"<\/ul>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"images_5":{"categories":"","tags":"","post_type":"attachment","orderby":"post_date","order":"DESC","numberposts":"5","before":"<hr \/>","content":"<p><a href=\"[post_permalink]\"><img src=\"[guid]\" \/><\/a><\/p>","after":"<hr \/>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"pageDropdown_100":{"categories":"","tags":"","post_type":"page","orderby":"menu_order","order":"ASC","numberposts":"100","before":"<p><select id=\"postList_dropdown\" style=\"width:200px; margin-right:20px\">","content":"<option value=\"[post_permalink]\">[post_title]<\/option>","after":"<\/ select> <input type=\"button\" id=\"postList_goBtn\" value=\"GO!\" onClick=\"javascript:window.location=document.getElementById(\'postList_dropdown\').value\" \/><\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"simplePostList_5":{"categories":"","tags":"","post_type":"post","orderby":"date","order":"DESC","numberposts":"5","before":"<p>","content":"<a href=\"[post_permalink]\">[post_title]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"footerPageList_10":{"categories":"","tags":"","post_type":"page","orderby":"menu_order","order":"ASC","numberposts":"10","before":"<p align=\"center\">","content":"<a href=\"[post_permalink]\">[post_title]<\/a>[final_end] | ","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"everythingNumbered_200":{"categories":"","tags":"","post_type":"any","orderby":"date","order":"ASC","numberposts":"200","before":"<p>All my pages and posts (roll over for titles):<br\/>","content":"<a href=\"[post_permalink]\" title=\"[post_title]\">[item_number]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"false","includeCats":"false","includeTags":"false"},"everythingID_200":{"categories":"","tags":"","post_type":"any","orderby":"date","order":"ASC","numberposts":"200","before":"<p>All my pages and posts (roll over for titles):<br\/>","content":"<a href=\"[post_permalink]\" title=\"[post_title]\">[ID]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"false","includeCats":"false","includeTags":"false"},"relatedPosts_5":{"categories":"","tags":"","post_type":"post","orderby":"rand","order":"DESC","numberposts":"5","before":"<p>Related posts: ","content":"<a href=\"[post_permalink]\" title=\"[post_excerpt]\">[post_title]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"true"}}';
 	$kalinsPostAdminOptions['default_preset'] = '';
 	$kalinsPostAdminOptions['doCleanup'] = 'true';
@@ -242,8 +217,7 @@ function kalinsPost_getAdminSettings(){//simply returns all our default option v
 	return $kalinsPostAdminOptions;
 }
 
-function kalinsPost_cleanup() {//deactivation hook. Clear all traces of PDF Creation Station
-	
+function kalinsPost_cleanup() {//deactivation hook. Clear all traces of Post List
 	$adminOptions = kalinsPost_get_admin_options();
 	if($adminOptions['doCleanup'] == 'true'){//if user set cleanup to true, remove all options and post meta data
 		delete_option(KALINSPOST_ADMIN_OPTIONS_NAME);//remove all options for admin
@@ -256,7 +230,7 @@ function kalinsPost_init(){
 }
 
 function kalinsPostinternalShortcodeReplace($str, $page, $count){
-	$SCList =  array("[ID]", "[post_date]", "[post_date_gmt]", "[post_title]", "[post_name]", "[post_modified]", "[post_modified_gmt]", "[guid]", "[comment_count]", "[post_content]");
+	$SCList =  array("[ID]", "[post_name]", "[guid]", "[post_content]", "[comment_count]");//not much left of this array, since there's so little post data that I can still just grab unmodified
 	
 	$l = count($SCList);
 	for($i = 0; $i<$l; $i++){//loop through all possible shortcodes
@@ -266,27 +240,130 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 	
 	$str = str_replace("[post_author]", get_userdata($page->post_author)->user_login, $str);//post_author requires an extra function call to convert the userID into a name so we can't do it in the loop above
 	$str = str_replace("[post_permalink]", get_permalink( $page->ID ), $str);
-	$str = str_replace("[item_number]", $count, $str);
 	
+	$str = str_replace("[post_title]", htmlentities ($page->post_title), $str);
+	//$str = str_replace("[post_content]", htmlentities ($page->post_content), $str);
 	
-	//not sure why wp_trim_excerpt(); doesn't work anymore
-	if(strpos($str, "[post_excerpt]")){
+	$postCallback = new KalinsPostCallback;
+	$postCallback->itemCount = $count;
+	//$str = str_replace("[item_number]", $count, $str);
+	$str = preg_replace_callback('#\[ *item_number *(offset=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postCountCallback'), $str);
+	
+	//$dateCallObj = new KalinsPost_DateCallback;//create dateCallback object for all the preg_replace_callbacks date calls
+	
+	$postCallback->curDate = $page->post_date;//change the curDate param and run the regex replace for each type of date/time shortcode
+	$str = preg_replace_callback('#\[ *post_date *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
+	
+	$postCallback->curDate = $page->post_date_gmt;
+	$str = preg_replace_callback('#\[ *post_date_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
+	
+	$postCallback->curDate = $page->post_modified;
+	$str = preg_replace_callback('#\[ *post_modified *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
+	
+	$postCallback->curDate = $page->post_modified_gmt;
+	$str = preg_replace_callback('#\[ *post_modified_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
+	
+	if(preg_match('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', $str)){
 		if($page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
-			$pageContent = strip_tags($page->post_content);
-			if(strlen($pageContent) <= 250) {
-				$str = str_replace("[post_excerpt]", $pageContent, $str);
-			}else{
-				
-				$str = str_replace("[post_excerpt]", substr($pageContent, 0, 250) ."...", $str);
-			}
-		}else{
-			$str = str_replace("[post_excerpt]", $page->post_excerpt, $str);
+			//$excerptCallObj = new KalinsPost_ExcerptCallback;
+			$postCallback->pageContent = strip_tags($page->post_content);
+			$str = preg_replace_callback('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postExcerptCallback'), $str);
+		}else{//if there is a post excerpt just use it and don't generate our own
+			$str = preg_replace('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', $page->post_excerpt, $str);
 		}
 	}
 	
+	//$pdfObj = new KalinsPost_PDFCallback;
+	
+	$postCallback->post_type = $page->post_type;
+	$postCallback->post_id = $page->ID;
+	$str = preg_replace_callback('#\[ *post_pdf *\]#', array(&$postCallback, 'postPDFCallback'), $str);
+	
+	$arr = wp_get_attachment_image_src( get_post_thumbnail_id( $page->ID ), 'single-post-thumbnail' );
+	$str = str_replace("[post_thumb]", $arr[0], $str);
 	
 	return $str;
 }
+
+class KalinsPostCallback{//class used just for all the preg_replace_callback function calls
+	
+	function postPDFCallback(){
+		if($this->post_type == "page"){
+			$postID = "pg_" .$this->post_id;
+		}else{
+			$postID = "po_" .$this->post_id;
+		}
+		return get_bloginfo('wpurl') . '/wp-content/plugins/kalins-pdf-creation-station/kalins_pdf_create.php?singlepost=' .$postID;
+	}
+	
+	function postExcerptCallback($matches){
+		if(isset($matches[2])){
+			$exLength = intval($matches[2]);
+		}else{
+			$exLength = 250;
+		}
+		
+		if(strlen($this->pageContent) > $exLength){
+			return strip_shortcodes(htmlentities(substr($this->pageContent, 0, $exLength))) ."...";//clean up and return excerpt
+		}else{
+			return strip_shortcodes(htmlentities($this->pageContent));
+		}
+	}
+	
+	function postDateCallback($matches){
+		if(isset($matches[2])){//geez, regex's are awesome. the [2] grabs the second internal portion of the regex, the actual shortcode param value, the () within the ()
+			return mysql2date($matches[2], $this->curDate, $translate = true);//translate the wordpress formatted date into whatever date formatting the user passed in
+		}else{
+			return mysql2date("m-d-Y", $this->curDate, $translate = true);//otherwise do a simple day-month-year format
+		}
+	}	
+	
+	function postCountCallback($matches){
+		if(isset($matches[2])){//geez, regex's are awesome. the [2] grabs the second internal portion of the regex, the actual shortcode param value, the () within the ()
+			return $this->itemCount + $matches[2];
+		}else{
+			return $this->itemCount + 1;//default is to start at 1
+		}
+	}	
+}
+
+/*
+class KalinsPost_ExcerptCallback{
+	function postExcerptCallback($matches){
+		if(isset($matches[2])){
+			$exLength = intval($matches[2]);
+		}else{
+			$exLength = 250;
+		}
+		
+		if(strlen($this->pageContent) > $exLength){
+			return strip_shortcodes(htmlentities(substr($this->pageContent, 0, $exLength))) ."...";//clean up and return excerpt
+		}else{
+			return strip_shortcodes(htmlentities($this->pageContent));
+		}
+	}
+}
+
+class KalinsPost_DateCallback{//create class just so we can pass in the $page var for preg_replace_callback()
+	function postDateCallback($matches){
+		if(isset($matches[2])){//geez, regex's are awesome. the [2] grabs the second internal portion of the regex, the actual shortcode param value, the () within the ()
+			return mysql2date($matches[2], $this->curDate, $translate = true);//translate the wordpress formatted date into whatever date formatting the user passed in
+		}else{
+			return mysql2date("m-d-Y", $this->curDate, $translate = true);//otherwise do a simple day-month-year format
+		}
+	}	
+}
+
+class KalinsPost_CountCallback{//create class just so we can pass in the $page var for preg_replace_callback()
+	function postCountCallback($matches){
+		if(isset($matches[2])){//geez, regex's are awesome. the [2] grabs the second internal portion of the regex, the actual shortcode param value, the () within the ()
+			return $this->itemCount + $matches[2];
+		}else{
+			return $this->itemCount + 1;//default is to start at 1
+		}
+	}	
+}
+*/
 
 function kalinsPost_shortcode($atts){
 	return kalinsPost_execute($atts['preset']);
@@ -300,51 +377,76 @@ function kalinsPost_execute($preset) {
 	
 	$adminOptions = kalinsPost_get_admin_options();
 	$presetObj = json_decode($adminOptions['preset_arr']);
-	$newVals = $presetObj->$preset;
+	
+	if(isset($presetObj->$preset)){
+		$newVals = $presetObj->$preset;
+	}else{//they passed in a wrong preset name, so we must error out :(
+		
+		if (current_user_can('manage_options')) { 
+			 return "<p>!Kalin's Post List has a problem. A non-existent preset name has been passed in! This message only displays for admins.</p>";
+		}else{ 
+			return "";
+		}
+	}
+	
 	$excludeList = "";
 	
 	global $post;
 	
-	if($newVals->excludeCurrent == "true"){
-		$excludeList = $post->ID;
-	}else{	
-	}
+	if($newVals->post_type == "none"){//if we're not showing a list of anything, only show the content, ignore everything else, and apply the shortcodes to the page being currently viewed
+		$output = kalinsPostinternalShortcodeReplace($newVals->content, $post, 0);
+	}else{
 	
-	$catString = $newVals->categories;
-	if($newVals->includeCats == "true"){
-		$post_categories = wp_get_post_categories($post->ID);
-		foreach($post_categories as $c){
-			$catString = $catString .$c .",";
+		if($newVals->excludeCurrent == "true"){
+			$excludeList = $post->ID;
 		}
-	}
-	
-	$tagString = $newVals->tags;
-	if($newVals->includeTags == "true"){
-		$post_tags = wp_get_post_tags( $post->ID);
-		foreach($post_tags as $c){
-			$tagString = $tagString .$c->slug .",";
-		}
-	}
-	
-	$posts = get_posts('numberposts=' .$newVals->numberposts .'&category=' .$catString .'&post_type=' .$newVals->post_type .'&tag=' .$tagString .'&orderby=' .$newVals->orderby .'&order=' .$newVals->order .'&exclude=' .$excludeList);
-	
-	$output = stripslashes($newVals->before);
-	
-	$count = 1;
-	
-	foreach ($posts as $page) {
-		$output = $output .kalinsPostinternalShortcodeReplace($newVals->content, $page, $count);
 		
-		$count = $count + 1;
+		$catString = $newVals->categories;
+		if($newVals->includeCats == "true"){
+			$post_categories = wp_get_post_categories($post->ID);
+			foreach($post_categories as $c){
+				$catString = $catString .$c .",";
+			}
+		}
+		
+		$tagString = $newVals->tags;
+		if($newVals->includeTags == "true"){
+			$post_tags = wp_get_post_tags( $post->ID);
+			foreach($post_tags as $c){
+				$tagString = $tagString .$c->slug .",";
+			}
+		}
+		
+		if(!isset($newVals->post_parent)){
+			$newVals->post_parent = "None";
+		}else{
+			if($newVals->post_parent == "current"){
+				$newVals->post_parent = $post->ID;
+			}
+		}
+		
+		$posts = get_posts('numberposts=' .$newVals->numberposts .'&category=' .$catString .'&post_type=' .$newVals->post_type .'&tag=' .$tagString .'&orderby=' .$newVals->orderby .'&order=' .$newVals->order .'&exclude=' .$excludeList .'&post_parent=' .$newVals->post_parent);
+		
+		if(count($posts) == 0){//return nothing if no results
+			return "";
+		}
+		
+		$output = $newVals->before;
+		$count = 0;
+		foreach ($posts as $page) {
+			$output = $output .kalinsPostinternalShortcodeReplace($newVals->content, $page, $count);
+			$count = $count + 1;
+		}
+		
+		$finalPos = strrpos ($output , "[final_end]");
+		if($finalPos > 0){//if ending exists (the last item where we don't want to add any more commas or ending brackets or whatever)
+			$output = substr($output, 0, $finalPos);//cut everything off at the final position of {final_end}
+			$output = str_replace("[final_end]", "", $output);//replace all the other instances of {final_end}, since we only care about the last one
+		}
+		
+		$output = $output .$newVals->after;
 	}
 	
-	$finalPos = strrpos ($output , "[final_end]");
-	if($finalPos > 0){//if ending exists (the last item where we don't want to add any more commas or ending brackets or whatever)
-		$output = substr($output, 0, $finalPos);//cut everything off at the final position of {final_end}
-		$output = str_replace("[final_end]", "", $output);//replace all the other instances of {final_end}, since we only care about the last one
-	}
-	
-	$output = $output .$newVals->after;
 	return $output;
 }
 
@@ -358,6 +460,8 @@ add_shortcode('post_list', 'kalinsPost_shortcode');
 add_action('admin_init', 'kalinsPost_admin_init');
 add_action('admin_menu', 'kalinsPost_configure_pages');
 //add_action( 'init', 'kalinsPost_init' );//just keep this for whenever we do internationalization - if the function is actually needed, that is.
+
+//add_action('contextual_help', 'kalinsPost_contextual_help', 10, 3);
 
 
 //content filter is called whenever a blog page is displayed. Comment this out if you aren't using links applied directly to individual posts, or if the link is set in your theme

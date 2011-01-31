@@ -14,9 +14,7 @@
 	
 	$adminOptions = kalinsPost_get_admin_options();
 	
-	//echo $adminOptions["preset_arr"];
 ?>
-
 
 <script language="javascript" type='text/javascript'>
 
@@ -135,6 +133,12 @@
 			$('#cboOrderby option[value=' + newValues["orderby"] + ']').attr('selected','selected');
 			$('#cboOrder option[value=' + newValues["order"] + ']').attr('selected','selected');
 			
+			
+			
+			$('#cboParent option[value=' + newValues["post_parent"] + ']').attr('selected','selected');
+			
+			
+			
 			if(newValues["excludeCurrent"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
 				$('#chkExcludeCurrent').attr('checked', true);
 			}else{
@@ -156,6 +160,8 @@
 			$('#txtPresetName').val(id);
 			
 			$('#presetPHP').html('PHP code: <code>kalinsPost_show("' + id + '");</code>');
+			
+			setNoneHide();
 		}
 		
 		function buildPresetTable(){//build the file table - we build it all in javascript so we can simply rebuild it whenever an entry is added through ajax
@@ -205,8 +211,6 @@
 			}
 			
 			data.preset_name = $("#txtPresetName").val();
-			
-			
 							   
 			if(presetArr[data.preset_name]){	//presetArr[data.preset_name]						   
 				if(!confirm("Are you sure you want to overwrite the preset" + data.preset_name)){
@@ -214,7 +218,6 @@
 					return;
 				}
 			}
-			
 			
 			data.categories = getCatString();
 			data.tags = getTagString();
@@ -236,20 +239,24 @@
 			data.doCleanup = $("#chkDoCleanup").is(':checked');
 			
 			
-			$('#presetPHP').html('PHP code: <code>kalinsPost_show("' + data.preset_name + '");</code>');
 			
+			if($('#parentSelector').css('display')=='none'){
+				data.post_parent = "None";
+			}else{
+				data.post_parent = $("#cboParent").val();
+			}
+			
+			
+			$('#presetPHP').html('PHP code: <code>kalinsPost_show("' + data.preset_name + '");</code>');
 			
 			$('#createStatus').html("Saving to preset...");
 	
 			// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
 			jQuery.post(ajaxurl, data, function(response) {
 												
-				//$('#createStatus').html(response);
-												
 				var startPosition = response.indexOf("{");
 				var responseObjString = response.substr(startPosition, response.lastIndexOf("}") - startPosition + 1);
 				
-				//alert(responseObjString);
 				var newFileData = JSON.parse(responseObjString);
 				
 				presetArr = newFileData;//.preset_arr;
@@ -257,8 +264,6 @@
 				$('#createStatus').html("Preset successfully added.");
 			});
 		});
-		
-		//btnRestorePreset
 		
 		$('#btnRestorePreset').click(function(){
 			//alert(data.post_type);
@@ -291,19 +296,39 @@
 			}
 		});
 		
-		//alert(catString);
+		$('#cboPost_type').change(function() {
+			setNoneHide();
+		});
 		
-		//setCatValues(catString);
-		//setTagValues(tagString);
+		function setNoneHide(){
+			
+			var postTypeVal = $("#cboPost_type").val() ;
+			
+			if(postTypeVal == "none"){
+				$('.noneHide').hide();
+				$('.noneShow').show();
+				$('#createStatus').html("In 'None' mode, the content field will be displayed only once and all shortcodes will refer to the current page.");
+			}else{
+				$('.noneHide').show();
+				$('.noneShow').hide();
+				$('#createStatus').html("&nbsp;");
+			}
+			
+			if(postTypeVal != "none" && postTypeVal != "post" && postTypeVal != "attachment"){//if it's a page or custom type, show parent selector
+				$('#parentSelector').show();
+			}else{
+				$('#parentSelector').hide();
+			}
+		}
+		
 		buildPresetTable();
-		//alert("fourth");
 		
 		$('#outputSpan').hide();
+		$('#parentSelector').hide();
 		
 	});
 	
 </script>
-
 
 <style type="text/css">
 	.txtHeader{
@@ -314,34 +339,39 @@
 </style>
 
 
-
-
-
 <h2>Kalin's Post List - settings</h2>
 
 <h3>by Kalin Ringkvist - <a href="http://kalinbooks.com/">KalinBooks.com</a></h3>
 
 <p><a href="http://kalinbooks.com/post-list-wordpress-plugin/">Plugin Page</a></p>
 
-
-
 <br/><hr/><br/>
 
 <p>Post type:
-<select id="cboPost_type" style="width:100px;" id="cboType">
-<option value="post">post</option>
-<option value="page">page</option>
-<option value="attachment">attachment</option>
+<select id="cboPost_type" name="cboPost_type" style="width:100px;">
+
+
+<?php
+	$post_types = get_post_types('','names');
+	foreach ($post_types as $post_type ) {//loop to create each option value. this will grab post, page, attachment and any custom post types
+		if($post_type != "revision" && $post_type != "nav_menu_item"){
+			echo "<option value='$post_type'>" .$post_type ."</option>";
+		}
+	}
+?>
+
+<option value="none">none</option>
 <option value="any">all</option>
 </select>
 
+<span class="noneHide">
 &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
 
 Show count: <input type="text" size='5' name='txtNumberposts' id='txtNumberposts' value='' ></input>
 
 &nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;
 
-Order by: <select id="cboOrderby" style="width:110px;" id="cboType">
+Order by: <select id="cboOrderby" style="width:110px;">
 <option value="post_date">post date</option>
 <option value="author">author ID</option>
 <option value="category">category ID</option>
@@ -360,14 +390,36 @@ Order by: <select id="cboOrderby" style="width:110px;" id="cboType">
 <option value="type">type</option>
 </select>
 
-<select id="cboOrder" style="width:110px;" id="cboType">
+<select id="cboOrder" style="width:110px;">
 <option value="DESC">descending</option>
 <option value="ASC">ascending</option>
 </select>
 
-</p>
+</p></span>
 
-<div style="overflow:scroll; overflow-x:hidden; height:150px; width:239px; float:left; border:ridge; margin-right:20px; padding-left:10px;">
+<div id="parentSelector"><p>
+Parent: <select id="cboParent" style="width:110px;">
+
+<option value="">-any or none-</option>
+<option value="current">-current page-</option>
+
+<?php
+	$posts = get_posts('numberposts=-1&post_type=any&orderby=title');
+	
+	foreach ($posts as $page) {
+		if(get_children($page->ID)){//if this returns some children, show the option
+			echo "<option value='" .$page->ID ."'>" .$page->post_title ."</option>";
+		}
+	}
+	
+?>
+
+</select>
+
+
+</p></div>
+
+<div style="overflow:scroll; overflow-x:hidden; height:150px; width:239px; float:left; border:ridge; margin-right:20px; padding-left:10px;" class="noneHide">
 <h3 align="center">Categories</h3>
 
 <input type=checkbox id="chkIncludeCats" name="chkIncludeCats" ></ input> Include current post categories<hr />
@@ -382,7 +434,7 @@ Order by: <select id="cboOrderby" style="width:110px;" id="cboType">
 
 </div>
 
-<div style="overflow:scroll; overflow-x:hidden; height:150px; width:239px; border:ridge; padding-left:10px; float:left; margin-right:20px">
+<div style="overflow:scroll; overflow-x:hidden; height:150px; width:239px; border:ridge; padding-left:10px; float:left; margin-right:20px"  class="noneHide">
 <h3 align='center'>Tags</h3>
 <input type=checkbox id="chkIncludeTags" name="chkIncludeTags" ></ input> Include current post tags<hr />
 <?php
@@ -394,14 +446,16 @@ Order by: <select id="cboOrderby" style="width:110px;" id="cboType">
 ?>
 </div>
 
-<div style="overflow:auto; height:150px; width:160px; border:ridge; padding-left:10px;">
+<div style="overflow:auto; height:150px; width:160px; border:ridge; padding-left:10px;" class="noneHide">
 
 <p>Nothing selected means show everything, including tags or categories not yet created. Checking all will include everything, but will exclude all future categories or tags.</p>
 
 </div>
+<span  class="noneHide">
 <br/><br/>
 
-<p>Before list HTML: <textarea rows='3' cols='200' name='txtBeforeList' id='txtBeforeList' value=''  class="txtHeader"></textarea></p><br/><br/><br/>
+
+<p>Before list HTML: <textarea rows='3' cols='200' name='txtBeforeList' id='txtBeforeList' value=''  class="txtHeader"></textarea></p><br/><br/><br/></span>
 
 <p>List item content: 
 
@@ -409,15 +463,16 @@ Order by: <select id="cboOrderby" style="width:110px;" id="cboType">
 
 </p>
 
+<span  class="noneHide">
 <br/><br/><br/>
 
-<p>After list HTML: <textarea rows='3' cols='200' name='txtAfterList' id='txtAfterList'  class="txtHeader"></textarea></p>
+<p>After list HTML: <textarea rows='3' cols='200' name='txtAfterList' id='txtAfterList'  class="txtHeader noneHide"></textarea></p>
 
 <br/><br/><br/>
 
 <input type=checkbox id="chkExcludeCurrent" name="chkExcludeCurrent" checked="yes"></ input> Exclude current post from results
 
-<br/><br/>
+</span><br/><br/>
 
 <p>
 <button id="btnSavePreset">Save to Preset</button>&nbsp;&nbsp;:&nbsp;&nbsp;<input type="text" size='30' name='txtPresetName' id='txtPresetName' value='<?php echo $adminOptions["default_preset"]; ?>' ></input>
@@ -430,8 +485,6 @@ Order by: <select id="cboOrderby" style="width:110px;" id="cboType">
 <textarea name='txtOutput' id='txtOutput' rows='6' cols="86">output goes here</textarea>
 </span>
 </p>
-
-
 
 <p>
 	<div id="presetListDiv">
@@ -452,40 +505,46 @@ Order by: <select id="cboOrderby" style="width:110px;" id="cboType">
         </p>
         <p>
         <ul>
+        
         <li><b>[ID]</b> - the ID number of the page/post</li>
         <li><b>[post_author]</b> - author of the page/post</li>
         <li><b>[post_permalink]</b> - the page permalink</li>
-        <li><b>[post_date]</b> - date page/post was created</li>
-        <li><b>[post_date_gmt]</b> - date page/post was created in gmt time</li>
+        <li><b>[post_date format="m-d-Y"]</b> - date page/post was created <b>*</b></li>
+        <li><b>[post_date_gmt format="m-d-Y"]</b> - date page/post was created in gmt time <b>*</b></li>
         <li><b>[post_title]</b> - page/post title</li>
-        <li><b>[post_excerpt]</b> - page/post excerpt</li>
+        <li><b>[post_excerpt length="250"]</b> - page/post excerpt (note the optional character 'length' parameter)</li>
         <li><b>[post_name]</b> - page/post slug name</li>
-        <li><b>[post_modified]</b> - date page/post was last modified</li>
-        <li><b>[post_modified_gmt]</b> - date page/post was last modified in gmt time</li>
-        <li><b>[guid]</b> - url of the page/post (usually post_permalink is better)</li>
+        <li><b>[post_modified format="m-d-Y"]</b> - date page/post was last modified <b>*</b></li>
+        <li><b>[post_modified_gmt format="m-d-Y"]</b> - date page/post was last modified in gmt time <b>*</b></li>
+        <li><b>[guid]</b> - original URL of the page/post (post_permalink is probably better)</li>
         <li><b>[comment_count]</b> - number of comments posted for this post/page</li>
-        <li><b>[item_number]</b> - the list index for each page/post (starts at 1)</li>
+
+        <li><b>[item_number offset="1"]</b> - the list index for each page/post (offset parameter sets start position)</li>
         <li><b>[final_end]</b> - on the final list item, everything after this shortcode will be excluded. This will allow you to have commas (or anything else) after each item except the last one.</li>
+        <li><b>[post_pdf]</b> - URL to the page/post's PDF file. (Requires Kalin's PDF Creation Station plugin. See help menu for more info.)</li>
+        <li><b>[post_thumb]</b> - URL to the page/post's featured image</li>
         </ul></p>
+        <p><b>*</b> Time shortcodes have an optional format parameter. Format your dates using these possible tokens: m=month, M=text month, F=full text month, d=day, D=short text Day Y=4 digit year, y=2 digit year, H=hour, i=minute, s=seconds. More tokens listed here: <a href="http://php.net/manual/en/function.date.php" target="_blank">http://php.net/manual/en/function.date.php.</a> </p>
         <p>Note: these shortcodes only work in the List item content box on this page.</p>
 
 <br/><hr/><br/>
     
-<p>Thank you for using Kalin's Post List</p>
+<p>Thank you for using PDF Creation Station. To report bugs, request help or suggest features, visit my <a href="http://kalinbooks.com/post-list-wordpress-plugin" target="_blank">plugin page</a>. If you have a cool example of Kalin's Post LIst in use, post a reply/link on my <a href="http://kalinbooks.com/post-list-wordpress-plugin/examples/">examples page.</a> If you find this plugin useful, please consider <A href="http://wordpress.org/extend/plugins/kalins-post-list/">rating this plugin on WordPress.org</A> or making a PayPal donation:</p>
 
-<?php 
-$versionNum = (int) substr(phpversion(), 0, 1);//check php version and possibly warn user
-if($versionNum < 5){//I have no idea what this thing will do at anything below 5.2.11 :)
-    echo "<p>You are running PHP version "  .phpversion() .". This plugin was built with PHP version 5.2.11 and has NOT been tested with older versions.</p>";
-}
-?>
+<p>
+
+<form action="https://www.paypal.com/cgi-bin/webscr" method="post">
+<input type="hidden" name="cmd" value="_s-xclick">
+<input type="hidden" name="hosted_button_id" value="C6KPVS6HQRZJS">
+<input type="image" src="https://www.paypal.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" alt="Donate to Kalin Ringkvist's WordPress plugin development.">
+<img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1">
+</form>
+
+</p><br/>
  
  <p><input type='checkbox' id='chkDoCleanup' name='chkDoCleanup' <?php if($adminOptions["doCleanup"] == "true"){echo "checked='yes' ";} ?>></input> Upon plugin deactivation clean up all database entries. (Save any preset to change this value)</p>
- 
-<p>Kalin's Post List was built with WordPress version 3.0. It has NOT been tested on older versions and might fail.</p>
+
 <p>You may also like <a href="http://kalinbooks.com/pdf-creation-station/">Kalin's PDF Creation Station WordPress Plugin</a> - <br /> Create highly customizable PDF documents from any combination of pages and posts, or add a link to generate a PDF on each individual page or post.</p>
 <p>Or <a href="http://kalinbooks.com/easy-edit-links-wordpress-plugin/">Kalin's Easy Edit Links</a> - <br />  Adds a box to your page/post edit screen with links and edit buttons for all pages, posts, tags, categories, and links for convenient linking and editing.</p>
-
-
 
 </html>

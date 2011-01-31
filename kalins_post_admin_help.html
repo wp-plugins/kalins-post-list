@@ -43,7 +43,17 @@
   </li>
   <br/>
   <li><strong>Shortcodes:</strong><br />
-  This is a reference list of the shortcodes that can be used within the "List item content" input field. They will refer to each respective post in the generated list. They will not function anywhere  except the &quot;List item content&quot; field. 
+  This is a reference list of the shortcodes that can be used within the "List item content" input field. They will refer to each respective post in the generated list. They will not function anywhere  except the &quot;List item content&quot; field.
+  
+  <ul>
+  <li>
+  Note that some shortcodes have optional parameters, offering greater customization.
+  </li>
+  <li>
+  The [post_pdf] shortcode will give you the url to create a PDF file of the appropriate page. This requires Kalin's PDF Creation Station WordPress plugin to be installed and activated to function properly. The url generated runs through the PDF creation script. If you want the URL directly to the PDF simply do something like this <code>{hard coded path to pdf folder}[post_name].pdf</code> or <code>{hard-coded-base-path}[ID].pdf</code>, depending on how you have your PDF filenames set up.
+  </li>
+  </ul>
+  
   </li><br/>
   <li><strong>Plugin deactivation:</strong><br />
   At the bottom of the page, you can select whether or not to save all your values when deactivating this plugin. If you have lots of custom presets that you don't want to lose, you may want to turn this off. Otherwise the default is to clean up everything upon plugin deactivation.
