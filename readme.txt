@@ -63,6 +63,9 @@ Note: May require PHP 5.2 and Wordpress 3.0 (hasn't been tested on older version
 = 2.0.1 =
 *Emergency bug fix: plugin no longer throws error when theme does not support post thumbnails.
 
+= 2.0.2 = 
+*changed htmlentities() call to htmlspecialchars() cuz I was seeing issues with excerpts not having special characters converted properly
+
 
 == Upgrade Notice ==
 
@@ -78,6 +81,11 @@ Sorry about all those help menus my plugin was killing before this
 = 2.0 =
 Lots of new features.
 
+= 2.0.1 =
+Hotfix for a bug that killed everything if the theme did not have thumbnail support
+
+= 2.0.2 =
+Hotfix for some character conversion issues with excerpts
 
 == About ==
 

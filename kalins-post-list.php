@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Kalin's Post List
-Version: 2.0.1
+Version: 2.0.2
 Plugin URI: http://kalinbooks.com/post-list-wordpress-plugin/
 Description: Creates a shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.
 Author: Kalin Ringkvist
@@ -241,15 +241,12 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 	$str = str_replace("[post_author]", get_userdata($page->post_author)->user_login, $str);//post_author requires an extra function call to convert the userID into a name so we can't do it in the loop above
 	$str = str_replace("[post_permalink]", get_permalink( $page->ID ), $str);
 	
-	$str = str_replace("[post_title]", htmlentities ($page->post_title), $str);
-	//$str = str_replace("[post_content]", htmlentities ($page->post_content), $str);
+	$str = str_replace("[post_title]", htmlspecialchars ($page->post_title), $str);
 	
 	$postCallback = new KalinsPostCallback;
 	$postCallback->itemCount = $count;
-	//$str = str_replace("[item_number]", $count, $str);
-	$str = preg_replace_callback('#\[ *item_number *(offset=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postCountCallback'), $str);
 	
-	//$dateCallObj = new KalinsPost_DateCallback;//create dateCallback object for all the preg_replace_callbacks date calls
+	$str = preg_replace_callback('#\[ *item_number *(offset=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postCountCallback'), $str);
 	
 	$postCallback->curDate = $page->post_date;//change the curDate param and run the regex replace for each type of date/time shortcode
 	$str = preg_replace_callback('#\[ *post_date *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
@@ -265,15 +262,12 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 	
 	if(preg_match('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', $str)){
 		if($page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
-			//$excerptCallObj = new KalinsPost_ExcerptCallback;
 			$postCallback->pageContent = strip_tags($page->post_content);
 			$str = preg_replace_callback('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postExcerptCallback'), $str);
 		}else{//if there is a post excerpt just use it and don't generate our own
 			$str = preg_replace('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', $page->post_excerpt, $str);
 		}
 	}
-	
-	//$pdfObj = new KalinsPost_PDFCallback;
 	
 	$postCallback->post_type = $page->post_type;
 	$postCallback->post_id = $page->ID;
@@ -306,9 +300,9 @@ class KalinsPostCallback{//class used just for all the preg_replace_callback fun
 		}
 		
 		if(strlen($this->pageContent) > $exLength){
-			return strip_shortcodes(htmlentities(substr($this->pageContent, 0, $exLength))) ."...";//clean up and return excerpt
+			return htmlspecialchars(strip_shortcodes(substr($this->pageContent, 0, $exLength))) ."...";//clean up and return excerpt
 		}else{
-			return strip_shortcodes(htmlentities($this->pageContent));
+			return htmlspecialchars(strip_shortcodes($this->pageContent));
 		}
 	}
 	
@@ -328,44 +322,6 @@ class KalinsPostCallback{//class used just for all the preg_replace_callback fun
 		}
 	}	
 }
-
-/*
-class KalinsPost_ExcerptCallback{
-	function postExcerptCallback($matches){
-		if(isset($matches[2])){
-			$exLength = intval($matches[2]);
-		}else{
-			$exLength = 250;
-		}
-		
-		if(strlen($this->pageContent) > $exLength){
-			return strip_shortcodes(htmlentities(substr($this->pageContent, 0, $exLength))) ."...";//clean up and return excerpt
-		}else{
-			return strip_shortcodes(htmlentities($this->pageContent));
-		}
-	}
-}
-
-class KalinsPost_DateCallback{//create class just so we can pass in the $page var for preg_replace_callback()
-	function postDateCallback($matches){
-		if(isset($matches[2])){//geez, regex's are awesome. the [2] grabs the second internal portion of the regex, the actual shortcode param value, the () within the ()
-			return mysql2date($matches[2], $this->curDate, $translate = true);//translate the wordpress formatted date into whatever date formatting the user passed in
-		}else{
-			return mysql2date("m-d-Y", $this->curDate, $translate = true);//otherwise do a simple day-month-year format
-		}
-	}	
-}
-
-class KalinsPost_CountCallback{//create class just so we can pass in the $page var for preg_replace_callback()
-	function postCountCallback($matches){
-		if(isset($matches[2])){//geez, regex's are awesome. the [2] grabs the second internal portion of the regex, the actual shortcode param value, the () within the ()
-			return $this->itemCount + $matches[2];
-		}else{
-			return $this->itemCount + 1;//default is to start at 1
-		}
-	}	
-}
-*/
 
 function kalinsPost_shortcode($atts){
 	return kalinsPost_execute($atts['preset']);
@@ -383,7 +339,6 @@ function kalinsPost_execute($preset) {
 	if(isset($presetObj->$preset)){
 		$newVals = $presetObj->$preset;
 	}else{//they passed in a wrong preset name, so we must error out :(
-		
 		if (current_user_can('manage_options')) { 
 			 return "<p>!Kalin's Post List has a problem. A non-existent preset name has been passed in! This message only displays for admins.</p>";
 		}else{ 
@@ -454,19 +409,10 @@ function kalinsPost_execute($preset) {
 
 add_shortcode('post_list', 'kalinsPost_shortcode');
 
-
-
-
-
 //wp actions to get everything started
 add_action('admin_init', 'kalinsPost_admin_init');
 add_action('admin_menu', 'kalinsPost_configure_pages');
 //add_action( 'init', 'kalinsPost_init' );//just keep this for whenever we do internationalization - if the function is actually needed, that is.
 
-//add_action('contextual_help', 'kalinsPost_contextual_help', 10, 3);
-
-
-//content filter is called whenever a blog page is displayed. Comment this out if you aren't using links applied directly to individual posts, or if the link is set in your theme
-//add_filter("the_content", "kalinsPost_content_filter" );
 
 ?>
