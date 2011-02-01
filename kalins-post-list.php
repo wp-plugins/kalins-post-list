@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Kalin's Post List
-Version: 2.0
+Version: 2.0.1
 Plugin URI: http://kalinbooks.com/post-list-wordpress-plugin/
 Description: Creates a shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.
 Author: Kalin Ringkvist
@@ -279,8 +279,10 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 	$postCallback->post_id = $page->ID;
 	$str = preg_replace_callback('#\[ *post_pdf *\]#', array(&$postCallback, 'postPDFCallback'), $str);
 	
-	$arr = wp_get_attachment_image_src( get_post_thumbnail_id( $page->ID ), 'single-post-thumbnail' );
-	$str = str_replace("[post_thumb]", $arr[0], $str);
+	if (current_theme_supports('post-thumbnails') ){
+		$arr = wp_get_attachment_image_src( get_post_thumbnail_id( $page->ID ), 'single-post-thumbnail' );
+		$str = str_replace("[post_thumb]", $arr[0], $str);
+	}
 	
 	return $str;
 }

@@ -60,6 +60,9 @@ Note: May require PHP 5.2 and Wordpress 3.0 (hasn't been tested on older version
 *improved handling of HTML-conflicting characters
 *strip shortcodes out before showing excerpts
 
+= 2.0.1 =
+*Emergency bug fix: plugin no longer throws error when theme does not support post thumbnails.
+
 
 == Upgrade Notice ==
 

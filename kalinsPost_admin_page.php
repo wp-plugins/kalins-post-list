@@ -522,7 +522,7 @@ Parent: <select id="cboParent" style="width:110px;">
         <li><b>[item_number offset="1"]</b> - the list index for each page/post (offset parameter sets start position)</li>
         <li><b>[final_end]</b> - on the final list item, everything after this shortcode will be excluded. This will allow you to have commas (or anything else) after each item except the last one.</li>
         <li><b>[post_pdf]</b> - URL to the page/post's PDF file. (Requires Kalin's PDF Creation Station plugin. See help menu for more info.)</li>
-        <li><b>[post_thumb]</b> - URL to the page/post's featured image</li>
+        <li><b>[post_thumb]</b> - URL to the page/post's featured image (requires theme support)</li>
         </ul></p>
         <p><b>*</b> Time shortcodes have an optional format parameter. Format your dates using these possible tokens: m=month, M=text month, F=full text month, d=day, D=short text Day Y=4 digit year, y=2 digit year, H=hour, i=minute, s=seconds. More tokens listed here: <a href="http://php.net/manual/en/function.date.php" target="_blank">http://php.net/manual/en/function.date.php.</a> </p>
         <p>Note: these shortcodes only work in the List item content box on this page.</p>
