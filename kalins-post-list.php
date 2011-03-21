@@ -536,10 +536,12 @@ function kalinsPost_execute($preset) {
 			foreach ($posts as $key => $page) {
 				$pageCats = implode(",", wp_get_post_categories($page->ID));//get each post's cats and concat into string
 				foreach($requiredCats as $key2 => $value){
-					$strPosVal = strpos($pageCats, $value);//for every cat in requiredCats, check if it's in this page list of cats
-					if($strPosVal === false && $value != ""){
-						unset($posts[$key]);//if it's not in the page's list, delete it
-						break;
+					if($value){
+						$strPosVal = strpos($pageCats, $value);//for every cat in requiredCats, check if it's in this page list of cats
+						if($strPosVal === false && $value != ""){
+							unset($posts[$key]);//if it's not in the page's list, delete it
+							break;
+						}
 					}
 				}
 			}
@@ -554,10 +556,13 @@ function kalinsPost_execute($preset) {
 					$pageTags = $pageTags .$tag->slug .",";
 				}
 				foreach($requiredTags as $key2 => $value){	//works the same as categor section above, except we're looking for slugs instead of IDs
-					$strPosVal = strpos($pageTags, $value);
-					if($strPosVal === false && $value != ""){
-						unset($posts[$key]);
-						break;
+				
+					if($value){
+						$strPosVal = strpos($pageTags, $value);
+						if($strPosVal === false && $value != ""){
+							unset($posts[$key]);
+							break;
+						}
 					}
 				}
 			}
