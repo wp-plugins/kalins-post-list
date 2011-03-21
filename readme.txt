@@ -1,21 +1,40 @@
 === Kalin's Post List ===
 Contributors: kalinbooks
-Tags: post, shortcode, pages, table of contents, related posts, links, automatic
+Tags: post, widget, shortcode, pages, table of contents, related posts, links, automatic
 Requires at least: 3.0
-Tested up to: 3.0.1
+Tested up to: 3.1
 Stable tag: trunk
 
-Creates a shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.
+Creates a widget, shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.
 
 == Description ==
 
 <p>
-Creates a shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.          
+Creates a widget, shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.
+</p>
+
+<p>
+Comes with 11 different presets, such as a list in a dropdown, a list within a CSS table, a footer-style list, a standard bulleted list, and a recent images list. You can also create an infinite number of your own presets with totally custom HTML so you can have different kinds of lists all over your website.
+</p>
+
+<p>
+Comes with 22 "internal shortcodes" (many with parameters for even more customization) that you can use to add post-specific information to each item in your list. This include the basics like title, author, permalink, date (with custom formatting), thumbnail, as well as some fancier ones like post meta data, comments, categories, tags, and a PHP function shortcode to allow you to inject your own PHP scripts.
+</p>
+
+<p>
+Options:
+Choose post type (includes custom posts), and the number of posts to show. There are 16 options for "order by", and an ascending/descending selector. You can also choose a post parent (e.g. list children of current page). Then you can select the categories and/or tags from which you'd like to show, or you can base this option off the current post's categories or tags (use like a related posts plugin). You may also choose to require that every post contain every category or tag. Then, of course, the HTML of the list and the information to actually show is completely customizable. Finally you can choose whether or not to include the current post on which the list is sitting.
+</p>
+
+<p>
+Example usage at: http://kalinbooks.com/post-list-wordpress-plugin/examples/
+If you have a cool or unique example of this plugin in use, please post a link on this page.
 </p>
 
 <p>
 Plugin by Kalin Ringkvist at http://kalinbooks.com/
 </p>
+
 <p>
 Plugin URL: http://kalinbooks.com/post-list-wordpress-plugin/
 Post a message if you find any bugs, issues or have a feature request and I will do my best to accommodate.
@@ -27,7 +46,7 @@ Post a message if you find any bugs, issues or have a feature request and I will
 2. Activate the plugin through the 'Plugins' menu in WordPress
 3. Go to the Post List settings menu to get shortcodes for the default preset configurations or create and save your own configurations.
 
-Note: May require PHP 5.2 and Wordpress 3.0 (hasn't been tested on older versions)
+Note: May require PHP 5.2 and Wordpress 3.1 (hasn't been tested on older versions)
 
 == Screenshots ==
 
@@ -66,6 +85,19 @@ Note: May require PHP 5.2 and Wordpress 3.0 (hasn't been tested on older version
 = 2.0.2 = 
 *changed htmlentities() call to htmlspecialchars() cuz I was seeing issues with excerpts not having special characters converted properly
 
+= 3.0 =
+*added widget for easy adding of any Post List to your sidebar
+*added preview to settings page so you can see what the list will look like as you're building it
+*added post comments shortcode. Includes easy way for PHP coders to fully customize the display
+*added post parent shortcode
+*added post category(s) shortcode
+*added post tags shortcode
+*added post_meta shortcode for post's custom fields
+*save function now fails gracefully if you forget to enter a preset name
+*shortcodes placed into 'before' and 'after' textfields now convert, based on the current page
+*added increment param to item_number shortcode for counting by something other than 1
+*added 'require all selected tags/categories' option, which allows you to require that every post include all the cats or tags you've selected
+*added php_function shortcode to allow custom PHP injection
 
 == Upgrade Notice ==
 
@@ -86,6 +118,9 @@ Hotfix for a bug that killed everything if the theme did not have thumbnail supp
 
 = 2.0.2 =
 Hotfix for some character conversion issues with excerpts
+
+= 3.0 = 
+New widget feature. New live preview feature. Several new shortcodes for outputting even more post info.
 
 == About ==
 

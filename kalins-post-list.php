@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Kalin's Post List
-Version: 2.0.2
+Version: 3.0
 Plugin URI: http://kalinbooks.com/post-list-wordpress-plugin/
 Description: Creates a shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.
 Author: Kalin Ringkvist
@@ -55,8 +55,6 @@ function kalinsPost_admin_init(){
 	add_action('wp_ajax_kalinsPost_restore_preset', 'kalinsPost_restore_preset');
 }
 
-//205
-
 function kalinsPost_save_preset(){	
 	check_ajax_referer( "kalinsPost_save_preset" );
 	
@@ -85,6 +83,9 @@ function kalinsPost_save_preset(){
 	$valObj['includeCats'] = $_POST['includeCats'];
 	$valObj['includeTags'] = $_POST['includeTags'];
 	
+	$valObj['requireAllCats'] = $_POST['requireAllCats'];
+	$valObj['requireAllTags'] = $_POST['requireAllTags'];
+	
 	$valArr->$preset_name = $valObj;
 	
 	$kalinsPostAdminOptions['preset_arr'] = json_encode($valArr);
@@ -94,9 +95,13 @@ function kalinsPost_save_preset(){
 	update_option(KALINSPOST_ADMIN_OPTIONS_NAME, $kalinsPostAdminOptions);//save options to database
 	
 	$outputVar->status = "success";
-	$outputVar->preset_arr = stripslashes($kalinsPostAdminOptions['preset_arr']);
+	$outputVar->preset_arr = json_decode($kalinsPostAdminOptions['preset_arr']);
 	
-	echo $kalinsPostAdminOptions['preset_arr'];
+	$outputVar->previewOutput = kalinsPost_execute($preset_name);
+	
+	//echo $kalinsPostAdminOptions['preset_arr'];
+	
+	echo json_encode($outputVar);
 }
 
 function kalinsPost_delete_preset(){
@@ -144,23 +149,9 @@ function kalinsPost_restore_preset(){
 function kalinsPost_configure_pages() {
 	
 	global $kalinsPost_hook;
-	
 	$kalinsPost_hook = add_submenu_page('options-general.php', "Kalin's Post List", "Kalin's Post List", 'manage_options', "Kalins-Post-List", 'kalinsPost_admin_page');
-	
-	//$mytool = add_submenu_page('tools.php', 'Kalins PDF Creation Station', 'PDF Creation Station', 'manage_options', __FILE__, 'kalinsPost_tool_page');
-	
 	add_action( "admin_print_scripts-$kalinsPost_hook", 'kalinsPost_admin_head' );
-	
-	//add_action('contextual_help', 'kalinsPost_contextual_help', 10, 0);
-	
-	//add_contextual_help( $mypage, "Hello baby why is this hapening?" );
-	
 	add_filter('contextual_help', 'kalinsPost_contextual_help', 10, 3);
-	
-	//add_action('admin_print_styles-' . $mypage, 'kalinsPost_admin_styles');
-	
-	//add_action( "admin_print_scripts-$mytool", 'kalinsPost_admin_head' );
-	//add_action('admin_print_styles-' . $mytool, 'kalinsPost_admin_styles');
 }
 
 function kalinsPost_admin_head() {
@@ -209,7 +200,7 @@ function kalinsPost_getAdminSettings(){//simply returns all our default option v
 	
 	$kalinsPostAdminOptions = array();
 	
-	$kalinsPostAdminOptions['preset_arr'] = '{"pageContentDivided_5":{"categories":"","tags":"","post_type":"page","orderby":"menu_order","order":"ASC","numberposts":"5","before":"<p><hr\/>","content":"<a href=\"[post_permalink]\">[post_title]<\/a> by [post_author] - [post_date]<br\/>[post_content]<hr\/>","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"postExcerptDivided_5":{"categories":"","tags":"","post_type":"post","orderby":"post_date","order":"DESC","numberposts":"5","before":"<p><hr\/>","content":"<a href=\"[post_permalink]\">[post_title]<\/a> by [post_author] - [post_date]<br\/>[post_excerpt]<hr\/>","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"simpleAttachmentList_10":{"categories":"","tags":"","post_type":"attachment","orderby":"post_date","order":"DESC","numberposts":"10","before":"<ul>","content":"<li><a href=\"[post_permalink]\">[post_title]<\/a><\/li>","after":"<\/ul>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"images_5":{"categories":"","tags":"","post_type":"attachment","orderby":"post_date","order":"DESC","numberposts":"5","before":"<hr \/>","content":"<p><a href=\"[post_permalink]\"><img src=\"[guid]\" \/><\/a><\/p>","after":"<hr \/>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"pageDropdown_100":{"categories":"","tags":"","post_type":"page","orderby":"menu_order","order":"ASC","numberposts":"100","before":"<p><select id=\"postList_dropdown\" style=\"width:200px; margin-right:20px\">","content":"<option value=\"[post_permalink]\">[post_title]<\/option>","after":"<\/ select> <input type=\"button\" id=\"postList_goBtn\" value=\"GO!\" onClick=\"javascript:window.location=document.getElementById(\'postList_dropdown\').value\" \/><\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"simplePostList_5":{"categories":"","tags":"","post_type":"post","orderby":"date","order":"DESC","numberposts":"5","before":"<p>","content":"<a href=\"[post_permalink]\">[post_title]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"footerPageList_10":{"categories":"","tags":"","post_type":"page","orderby":"menu_order","order":"ASC","numberposts":"10","before":"<p align=\"center\">","content":"<a href=\"[post_permalink]\">[post_title]<\/a>[final_end] | ","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"everythingNumbered_200":{"categories":"","tags":"","post_type":"any","orderby":"date","order":"ASC","numberposts":"200","before":"<p>All my pages and posts (roll over for titles):<br\/>","content":"<a href=\"[post_permalink]\" title=\"[post_title]\">[item_number]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"false","includeCats":"false","includeTags":"false"},"everythingID_200":{"categories":"","tags":"","post_type":"any","orderby":"date","order":"ASC","numberposts":"200","before":"<p>All my pages and posts (roll over for titles):<br\/>","content":"<a href=\"[post_permalink]\" title=\"[post_title]\">[ID]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"false","includeCats":"false","includeTags":"false"},"relatedPosts_5":{"categories":"","tags":"","post_type":"post","orderby":"rand","order":"DESC","numberposts":"5","before":"<p>Related posts: ","content":"<a href=\"[post_permalink]\" title=\"[post_excerpt]\">[post_title]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"true"}}';
+	$kalinsPostAdminOptions['preset_arr'] = '{"pageContentDivided_5":{"categories":"","tags":"","post_type":"page","orderby":"menu_order","order":"ASC","numberposts":"5","before":"<p><hr\/>","content":"<a href=\"[post_permalink]\">[post_title]<\/a> by [post_author] - [post_date]<br\/>[post_content]<hr\/>","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"postExcerptDivided_5":{"categories":"","tags":"","post_type":"post","orderby":"post_date","order":"DESC","numberposts":"5","before":"<p><hr\/>","content":"<a href=\"[post_permalink]\">[post_title]<\/a> by [post_author] - [post_date]<br\/>[post_excerpt]<hr\/>","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"simpleAttachmentList_10":{"categories":"","tags":"","post_type":"attachment","orderby":"post_date","order":"DESC","numberposts":"10","before":"<ul>","content":"<li><a href=\"[post_permalink]\">[post_title]<\/a><\/li>","after":"<\/ul>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"images_5":{"categories":"","tags":"","post_type":"attachment","orderby":"post_date","order":"DESC","numberposts":"5","before":"<hr \/>","content":"<p><a href=\"[post_permalink]\"><img src=\"[guid]\" \/><\/a><\/p>","after":"<hr \/>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"pageDropdown_100":{"categories":"","tags":"","post_type":"page","orderby":"menu_order","order":"ASC","numberposts":"100","before":"<p><select id=\"postList_dropdown\" style=\"width:200px; margin-right:20px\">","content":"<option value=\"[post_permalink]\">[post_title]<\/option>","after":"<\/ select> <input type=\"button\" id=\"postList_goBtn\" value=\"GO!\" onClick=\"javascript:window.location=document.getElementById(\'postList_dropdown\').value\" \/><\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"simplePostList_5":{"categories":"","tags":"","post_type":"post","orderby":"date","order":"DESC","numberposts":"5","before":"<p>","content":"<a href=\"[post_permalink]\">[post_title]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"footerPageList_10":{"categories":"","tags":"","post_type":"page","orderby":"menu_order","order":"ASC","numberposts":"10","before":"<p align=\"center\">","content":"<a href=\"[post_permalink]\">[post_title]<\/a>[final_end] | ","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"false"},"everythingNumbered_200":{"categories":"","tags":"","post_type":"any","orderby":"date","order":"ASC","numberposts":"200","before":"<p>All my pages and posts (roll over for titles):<br\/>","content":"<a href=\"[post_permalink]\" title=\"[post_title]\">[item_number]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"false","includeCats":"false","includeTags":"false"},"everythingID_200":{"categories":"","tags":"","post_type":"any","orderby":"date","order":"ASC","numberposts":"200","before":"<p>All my pages and posts (roll over for titles):<br\/>","content":"<a href=\"[post_permalink]\" title=\"[post_title]\">[ID]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"false","includeCats":"false","includeTags":"false"},"relatedPosts_5":{"categories":"","tags":"","post_type":"post","orderby":"rand","order":"DESC","numberposts":"5","before":"<p>Related posts: ","content":"<a href=\"[post_permalink]\" title=\"[post_excerpt]\">[post_title]<\/a>[final_end], ","after":"<\/p>","excludeCurrent":"true","includeCats":"false","includeTags":"true"},"CSSTable":{"categories":"","tags":"","post_type":"post","orderby":"post_date","order":"DESC","numberposts":"15","before":"<style>\n.k_ul{width: 320px;text-align:center;list-style-type:none;}\n.k_li{width: 100px; height:65px; float: left; padding:3px;}\n.k_a{border:1px solid #f00;display:block;text-decoration:none;font-weight:bold;width:100%; height:65px}\n.k_a:hover{border:1px solid #00f;background:#00f;color:#fff;}\n.k_a:active{background:#f00;color:#fff;}\n<\/style><ul class=\"k_ul\">","content":"<li class=\"k_li\"><a class=\"k_a\" href=\"[post_permalink]\">[post_title]<\/a><\/li>","after":"<\/ul>","excludeCurrent":"true","post_parent":"None","includeCats":"false","includeTags":"false","requireAllCats":"false","requireAllTags":"false"}}';
 	$kalinsPostAdminOptions['default_preset'] = '';
 	$kalinsPostAdminOptions['doCleanup'] = 'true';
 	//$kalinsPostAdminOptions['doCleanup'] = "true";
@@ -240,23 +231,19 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 	
 	$str = str_replace("[post_author]", get_userdata($page->post_author)->user_login, $str);//post_author requires an extra function call to convert the userID into a name so we can't do it in the loop above
 	$str = str_replace("[post_permalink]", get_permalink( $page->ID ), $str);
-	
 	$str = str_replace("[post_title]", htmlspecialchars ($page->post_title), $str);
 	
 	$postCallback = new KalinsPostCallback;
 	$postCallback->itemCount = $count;
 	
-	$str = preg_replace_callback('#\[ *item_number *(offset=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postCountCallback'), $str);
+	$str = preg_replace_callback('#\[ *item_number *(offset=[\'|\"]([^\'\"]*)[\'|\"])? *(increment=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postCountCallback'), $str);
 	
 	$postCallback->curDate = $page->post_date;//change the curDate param and run the regex replace for each type of date/time shortcode
 	$str = preg_replace_callback('#\[ *post_date *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
-	
 	$postCallback->curDate = $page->post_date_gmt;
 	$str = preg_replace_callback('#\[ *post_date_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
-	
 	$postCallback->curDate = $page->post_modified;
 	$str = preg_replace_callback('#\[ *post_modified *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
-	
 	$postCallback->curDate = $page->post_modified_gmt;
 	$str = preg_replace_callback('#\[ *post_modified_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
 	
@@ -277,6 +264,15 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 		$arr = wp_get_attachment_image_src( get_post_thumbnail_id( $page->ID ), 'single-post-thumbnail' );
 		$str = str_replace("[post_thumb]", $arr[0], $str);
 	}
+	
+	$postCallback->page = $page;
+	$str = preg_replace_callback('#\[ *post_meta *(name=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postMetaCallback'), $str);
+	$str = preg_replace_callback('#\[ *post_categories *(delimeter=[\'|\"]([^\'\"]*)[\'|\"])? *(links=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postCategoriesCallback'), $str);
+	$str = preg_replace_callback('#\[ *post_tags *(delimeter=[\'|\"]([^\'\"]*)[\'|\"])? *(links=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postTagsCallback'), $str);
+	$str = preg_replace_callback('#\[ *post_comments *(before=[\'|\"]([^\'\"]*)[\'|\"])? *(after=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'commentCallback'), $str);
+	$str = preg_replace_callback('#\[ *post_parent *(link=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postParentCallback'), $str);
+	
+	$str = preg_replace_callback('#\[ *php_function *(name=[\'|\"]([^\'\"]*)[\'|\"])? *(param=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'functionCallback'), $str);
 	
 	return $str;
 }
@@ -300,9 +296,9 @@ class KalinsPostCallback{//class used just for all the preg_replace_callback fun
 		}
 		
 		if(strlen($this->pageContent) > $exLength){
-			return htmlspecialchars(strip_shortcodes(substr($this->pageContent, 0, $exLength))) ."...";//clean up and return excerpt
+			return strip_shortcodes(substr($this->pageContent, 0, $exLength)) ."...";//clean up and return excerpt
 		}else{
-			return htmlspecialchars(strip_shortcodes($this->pageContent));
+			return strip_shortcodes($this->pageContent);
 		}
 	}
 	
@@ -315,12 +311,153 @@ class KalinsPostCallback{//class used just for all the preg_replace_callback fun
 	}	
 	
 	function postCountCallback($matches){
-		if(isset($matches[2])){//geez, regex's are awesome. the [2] grabs the second internal portion of the regex, the actual shortcode param value, the () within the ()
-			return $this->itemCount + $matches[2];
+		if(isset($matches[4])){
+			$increment = $matches[4];
 		}else{
-			return $this->itemCount + 1;//default is to start at 1
+			$increment = 1;//default is to increment by 1 each loop
 		}
-	}	
+		
+		if(isset($matches[2])){
+			return $this->itemCount * $increment + $matches[2];
+		}else{
+			return $this->itemCount * $increment + 1;//default is to start at 1
+		}
+	}
+	
+	function postMetaCallback($matches){
+		$arr = get_post_meta($this->page->ID, $matches[2]);
+		return $arr[0];
+	}
+	
+	function postCategoriesCallback($matches){
+		$catString = "";
+		
+		$categories = get_the_category($this->page->ID);
+		$last_item = end($categories);
+		
+		if(isset($matches[2])){
+			$delimeter = $matches[2];
+		}else{
+			$delimeter = ', ';
+		}
+		
+		if(isset($matches[4]) && strtolower($matches[4]) == 'false'){
+			$links = false;
+		}else{
+			$links = true;
+		}
+		
+		foreach($categories as $category) {
+			if($links){
+				$catString = $catString .'<a href="' .get_category_link( $category->cat_ID ) .'" >' .$category->cat_name .'</a>';
+			}else{
+				$catString = $catString .$category->cat_name;
+			}
+			if($category != $last_item){
+				$catString = $catString .$delimeter;
+			}
+		}
+		
+		return $catString;
+	}
+	
+	function postTagsCallback($matches){
+		
+		$catString = "";
+		$categories = get_the_tags($this->page->ID);
+		
+		if(!$categories){
+			return "";
+		}
+		
+		$last_item = end($categories);
+		
+		if(isset($matches[2])){
+			$delimeter = $matches[2];
+		}else{
+			$delimeter = ', ';
+		}
+		
+		if(isset($matches[4]) && strtolower($matches[4]) == 'false'){
+			$links = false;
+		}else{
+			$links = true;
+		}
+		
+		foreach($categories as $category) {
+			if($links){
+				$catString = $catString .'<a href="' .get_tag_link( $category->term_id ) .'" >' .$category->name .'</a>';
+			}else{
+				$catString = $catString .$category->name;
+			}
+			
+			if($category != $last_item){
+				$catString = $catString .$delimeter;
+			}
+		}
+		
+		return $catString;
+	}
+	
+	function commentCallback($matches) {
+		
+		global $post;
+		$post = $this->page;//set global post object just for comments
+		query_posts('p=' .$this->page->ID);//for some reason this is also necessary so other plugins have access to values normally inside The Loop
+		
+		if(defined("KALINS_PDF_COMMENT_CALLBACK")){
+			return call_user_func(KALINS_PDF_COMMENT_CALLBACK);
+		}
+		
+		$comments = get_comments('status=approve&post_id=' .$post->ID);
+		$commentString = $matches[2];
+		
+		foreach($comments as $comment) {
+			if($comment->comment_author_url == ""){
+				$authorString = $comment->comment_author;
+			}else{
+				$authorString = '<a href="' .$comment->comment_author_url .'" >' .$comment->comment_author ."</a>";
+			}
+			$commentString = $commentString .'<p>' .$authorString ."- " .$comment->comment_author_email ." - " .get_comment_date(null, $comment->comment_ID) ." @ " .get_comment_date(get_option('time_format'), $comment->comment_ID) ."<br />" . $comment->comment_content ."</p>";	
+		}
+		
+		return $commentString .$matches[4];
+	}
+	
+	function postParentCallback($matches){
+		$parentID = $this->page->post_parent;
+		
+		if($parentID == 0){
+			return "";
+		}
+		
+		if($matches[2] == "false"){
+			return get_the_title($parentID);
+		}else{
+			return '<a href="' .get_permalink( $parentID ) .'" >' .get_the_title($parentID) .'</a>';
+		}
+	}
+	
+	function functionCallback($matches){//call a user defined function through shortcode
+	
+		if(!defined("KALINS_ALLOW_PHP") || KALINS_ALLOW_PHP !== true){
+			return ' Error: add define("KALINS_ALLOW_PHP", true); to your wp-config.php for php_function to work. ';
+		}
+		
+		if(!$matches[2]){
+			return ' Error: injected PHP function must have a name. ';
+		}
+		
+		global $post;
+		$post = $this->page;
+		query_posts('p=' .$this->page->ID);//set global post object and post data so custom function has access to it
+		
+		if($matches[4]){
+			return call_user_func($matches[2], $matches[4]);
+		}else{
+			return call_user_func($matches[2]);
+		}
+	}
 }
 
 function kalinsPost_shortcode($atts){
@@ -340,7 +477,7 @@ function kalinsPost_execute($preset) {
 		$newVals = $presetObj->$preset;
 	}else{//they passed in a wrong preset name, so we must error out :(
 		if (current_user_can('manage_options')) { 
-			 return "<p>!Kalin's Post List has a problem. A non-existent preset name has been passed in! This message only displays for admins.</p>";
+			 return "<p>Kalin's Post List has a problem. A non-existent preset name has been passed in! This message only displays for admins.</p>";
 		}else{ 
 			return "";
 		}
@@ -357,6 +494,10 @@ function kalinsPost_execute($preset) {
 		if($newVals->excludeCurrent == "true"){
 			$excludeList = $post->ID;
 		}
+		
+		$newVals->before = kalinsPostinternalShortcodeReplace($newVals->before, $post, 0);
+		
+		$newVals->after = kalinsPostinternalShortcodeReplace($newVals->after, $post, 0);
 		
 		$catString = $newVals->categories;
 		if($newVals->includeCats == "true"){
@@ -382,15 +523,59 @@ function kalinsPost_execute($preset) {
 			}
 		}
 		
+		if($newVals->requireAllCats == "true" || $newVals->requireAllTags == "true"){
+			$origNumberposts = $newVals->numberposts;
+			$newVals->numberposts = -1;
+		}
+		
 		$posts = get_posts('numberposts=' .$newVals->numberposts .'&category=' .$catString .'&post_type=' .$newVals->post_type .'&tag=' .$tagString .'&orderby=' .$newVals->orderby .'&order=' .$newVals->order .'&exclude=' .$excludeList .'&post_parent=' .$newVals->post_parent);
+		
+		
+		if($newVals->requireAllCats == "true"){//if every post must lie in every selected category
+			$requiredCats = explode(",", $newVals->categories);//create array from list of categories
+			foreach ($posts as $key => $page) {
+				$pageCats = implode(",", wp_get_post_categories($page->ID));//get each post's cats and concat into string
+				foreach($requiredCats as $key2 => $value){
+					$strPosVal = strpos($pageCats, $value);//for every cat in requiredCats, check if it's in this page list of cats
+					if($strPosVal === false && $value != ""){
+						unset($posts[$key]);//if it's not in the page's list, delete it
+						break;
+					}
+				}
+			}
+		}
+		
+		if($newVals->requireAllTags == "true"){
+			$requiredTags = explode(",", $newVals->tags);
+			foreach ($posts as $key => $page) {
+				$tagArr = wp_get_post_tags($page->ID);
+				$pageTags = "";
+				foreach($tagArr as $tag){//tags came as an array of objects instead of ID values, so we loop to create our searchable string, which for tags is based on slugs instead of IDs
+					$pageTags = $pageTags .$tag->slug .",";
+				}
+				foreach($requiredTags as $key2 => $value){	//works the same as categor section above, except we're looking for slugs instead of IDs
+					$strPosVal = strpos($pageTags, $value);
+					if($strPosVal === false && $value != ""){
+						unset($posts[$key]);
+						break;
+					}
+				}
+			}
+		}
+		
+		if($newVals->requireAllCats == "true" || $newVals->requireAllTags == "true"){
+			$posts = array_slice($posts, 0, $origNumberposts);
+		}
 		
 		if(count($posts) == 0){//return nothing if no results
 			return "";
 		}
 		
 		$output = $newVals->before;
+		
 		$count = 0;
 		foreach ($posts as $page) {
+			
 			$output = $output .kalinsPostinternalShortcodeReplace($newVals->content, $page, $count);
 			$count = $count + 1;
 		}
@@ -406,6 +591,68 @@ function kalinsPost_execute($preset) {
 	
 	return $output;
 }
+
+
+class WP_Kalins_Post_List_Widget extends WP_Widget {
+ 
+	function WP_Kalins_Post_List_Widget() {
+		$widget_ops = array( 'classname' => 'widget_KalinsPostList', 'description' => __( "Display a customized list of posts or pages" ) );
+		$this->WP_Widget('kalinsPostList', __("Kalin's Post List"), $widget_ops);
+	}
+ 
+	// This code displays the widget on the screen.
+	function widget($args, $instance) {
+		extract($args);
+		echo $before_widget;
+		if(!empty($instance['title'])) { 
+			echo $before_title . $instance['title'] . $after_title; 
+		}
+		
+		kalinsPost_show($instance['k_preset']);
+		
+		echo $after_widget;
+	}
+ 
+	// Updates the settings.
+	function update($new_instance, $old_instance) {
+		return $new_instance;
+	}
+	
+	function form($instance) {		
+	
+		$adminOptions = kalinsPost_get_admin_options();	
+		$presetArr = json_decode($adminOptions["preset_arr"]);
+		
+		echo '<div>';
+		echo '<label for="' . $this->get_field_id("title") .'">Title:</label>';
+		echo '<input type="text" class="widefat" ';
+		echo 'name="' . $this->get_field_name("title") . '" '; 
+		echo 'id="' . $this->get_field_id("title") . '" ';
+		echo 'value="' . $instance["title"] . '" /><br/><br/>';
+		
+		echo '<label for="' . $this->get_field_id("k_preset") .'">Preset Name:</ label>';
+		echo '<select class="widefat" ';
+		echo 'name="' . $this->get_field_name("k_preset") . '" ';
+		echo 'id="' . $this->get_field_id("k_preset") . '" >';
+		
+		$selectVal = $instance['k_preset'];
+		
+		foreach($presetArr as $key => $value){
+			if($key == $instance['k_preset']){
+				echo '<option value="' .$key .'" selected="yes" >' .$key .'</ option>';
+			}else{
+				echo '<option value="' .$key .'">' .$key .'</ option>';
+			}
+		}
+		
+		echo '</select><br/><br/></div>';
+		
+	} // end function form
+ 
+} // end class WP_Widget_BareBones
+ 
+// Register the widget.
+add_action('widgets_init', create_function('', 'return register_widget("WP_Kalins_Post_List_Widget");'));
 
 add_shortcode('post_list', 'kalinsPost_shortcode');
 

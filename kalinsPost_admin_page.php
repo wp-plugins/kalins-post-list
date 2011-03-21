@@ -32,7 +32,7 @@
 		function getCatString(){
 			var catString = '';
 			var pageCount = 0;
-			var l = catList.length;	
+			var l = catList.length;
 			for(var i=0; i<l; i++){
 				if($('#chkCat' + catList[i]['term_id']).is(':checked')){
 					catString += catList[i]['term_id'] + ",";
@@ -80,6 +80,12 @@
 			for(var i=0; i<l; i++){
 				$('#chkTag' + arrCats[i]).attr('checked', true);
 			}
+		}
+		
+		function setPHPOutput(preset_name){
+			//$('#presetPHP').html('PHP code: <code>if(function_exists("kalinsPost_show"){kalinsPost_show("' + data.preset_name + '");}</code>');
+			
+			$('#presetPHP').html('PHP code: <code>if(function_exists("kalinsPost_show")){kalinsPost_show("' + preset_name + '");}</code>');
 		}
 		
 		function deletePreset(id){
@@ -133,11 +139,7 @@
 			$('#cboOrderby option[value=' + newValues["orderby"] + ']').attr('selected','selected');
 			$('#cboOrder option[value=' + newValues["order"] + ']').attr('selected','selected');
 			
-			
-			
 			$('#cboParent option[value=' + newValues["post_parent"] + ']').attr('selected','selected');
-			
-			
 			
 			if(newValues["excludeCurrent"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
 				$('#chkExcludeCurrent').attr('checked', true);
@@ -157,9 +159,25 @@
 				$('#chkIncludeTags').attr('checked', false);
 			}
 			
+			if(newValues["requireAllCats"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+				$('#chkRequireAllCats').attr('checked', true);
+			}else{
+				$('#chkRequireAllCats').attr('checked', false);
+			}
+			
+			if(newValues["requireAllTags"] == 'true'){//hmmm, maybe there's a way to get an actual boolean to be passed through instead of the string
+				$('#chkRequireAllTags').attr('checked', true);
+			}else{
+				$('#chkRequireAllTags').attr('checked', false);
+			}
+			
 			$('#txtPresetName').val(id);
 			
-			$('#presetPHP').html('PHP code: <code>kalinsPost_show("' + id + '");</code>');
+			$('#previewDiv').html("");
+			
+			//$('#presetPHP').html('PHP code: <code>kalinsPost_show("' + id + '");</code>');
+			
+			setPHPOutput(id);
 			
 			setNoneHide();
 		}
@@ -205,15 +223,19 @@
 		}
 		
 		$('#btnSavePreset').click(function(){
-			//alert(data.post_type);
 			var data = { action: 'kalinsPost_save_preset',
 				_ajax_nonce : savePresetNonce
 			}
 			
 			data.preset_name = $("#txtPresetName").val();
+			
+			if(data.preset_name == ""){
+				$('#createStatus').html("Error: Please type a name for your preset, or press 'load' on any of the presets below to edit.");
+				return;
+			}
 							   
-			if(presetArr[data.preset_name]){	//presetArr[data.preset_name]						   
-				if(!confirm("Are you sure you want to overwrite the preset" + data.preset_name)){
+			if(presetArr[data.preset_name]){				   
+				if(!confirm("Are you sure you want to overwrite the preset " + data.preset_name)){
 					$('#createStatus').html("<br/>");
 					return;
 				}
@@ -221,6 +243,25 @@
 			
 			data.categories = getCatString();
 			data.tags = getTagString();
+			
+			data.requireAllCats = $("#chkRequireAllCats").is(':checked');
+			data.requireAllTags = $("#chkRequireAllTags").is(':checked');
+			
+			data.includeCats = $("#chkIncludeCats").is(':checked');
+			data.includeTags = $("#chkIncludeTags").is(':checked');
+			
+			if(data.requireAllCats && data.categories.split(",").length < 3 && !data.includeCats){//check if there's only one or zeor cats selected (plus the empty one at the end)
+				$('#createStatus').html("Error: If you select 'Require all selected categories' you must also select at least two categories.");
+				alert("Error: If you select 'Require all selected categories' you must also select at least two categories.");
+				return;
+			}
+			
+			if(data.requireAllTags && data.tags.split(",").length < 3 && !data.includeTags){//check if there's only one or zeor cats selected (plus the empty one at the end)
+				$('#createStatus').html("Error: If you select 'Require all selected tags' you must also select at least two tags.");
+				alert("Error: If you select 'Require all selected tags' you must also select at least two tags.");
+				return;
+			}
+			
 			data.post_type = $("#cboPost_type").val();
 			
 			data.numberposts = $("#txtNumberposts").val();
@@ -233,12 +274,9 @@
 			
 			data.excludeCurrent = $("#chkExcludeCurrent").is(':checked');
 			
-			data.includeCats = $("#chkIncludeCats").is(':checked');
-			data.includeTags = $("#chkIncludeTags").is(':checked');
+			
 			
 			data.doCleanup = $("#chkDoCleanup").is(':checked');
-			
-			
 			
 			if($('#parentSelector').css('display')=='none'){
 				data.post_parent = "None";
@@ -246,22 +284,36 @@
 				data.post_parent = $("#cboParent").val();
 			}
 			
+			//$('#presetPHP').html('PHP code: <code>kalinsPost_show("' + data.preset_name + '");</code>');
 			
-			$('#presetPHP').html('PHP code: <code>kalinsPost_show("' + data.preset_name + '");</code>');
+			setPHPOutput(data.preset_name);
 			
 			$('#createStatus').html("Saving to preset...");
 	
 			// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
 			jQuery.post(ajaxurl, data, function(response) {
+				
+				//alert(response);
 												
 				var startPosition = response.indexOf("{");
 				var responseObjString = response.substr(startPosition, response.lastIndexOf("}") - startPosition + 1);
 				
+				//alert(responseObjString);
+				
 				var newFileData = JSON.parse(responseObjString);
 				
-				presetArr = newFileData;//.preset_arr;
+				presetArr = newFileData.preset_arr;
 				buildPresetTable();
-				$('#createStatus').html("Preset successfully added.");
+				$('#createStatus').html("Preset successfully saved.");
+				
+				if($("#chkShowPreview").is(':checked')){
+					$('#previewDiv').html(newFileData.previewOutput);
+				}else{
+					$('#previewDiv').html("");
+				}
+				
+				//$('#previewDiv').html("Hello floopy doop");
+				
 			});
 		});
 		
@@ -274,11 +326,10 @@
 			if(confirm("Are you sure you want to restore all default presets? This will remove any changes you've made to the default presets, but will not delete your custom presets.")){
 				
 				$('#createStatus').html("Restoring presets...");
+				$('#previewDiv').html("");
 		
 				// since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
 				jQuery.post(ajaxurl, data, function(response) {
-													
-					//$('#createStatus').html(response);
 													
 					var startPosition = response.indexOf("{");
 					var responseObjString = response.substr(startPosition, response.lastIndexOf("}") - startPosition + 1);
@@ -323,7 +374,7 @@
 		
 		buildPresetTable();
 		
-		$('#outputSpan').hide();
+		//$('#outputSpan').hide();
 		$('#parentSelector').hide();
 		
 	});
@@ -405,13 +456,11 @@ Parent: <select id="cboParent" style="width:110px;">
 
 <?php
 	$posts = get_posts('numberposts=-1&post_type=any&orderby=title');
-	
 	foreach ($posts as $page) {
 		if(get_children($page->ID)){//if this returns some children, show the option
 			echo "<option value='" .$page->ID ."'>" .$page->post_title ."</option>";
 		}
 	}
-	
 ?>
 
 </select>
@@ -422,7 +471,9 @@ Parent: <select id="cboParent" style="width:110px;">
 <div style="overflow:scroll; overflow-x:hidden; height:150px; width:239px; float:left; border:ridge; margin-right:20px; padding-left:10px;" class="noneHide">
 <h3 align="center">Categories</h3>
 
-<input type=checkbox id="chkIncludeCats" name="chkIncludeCats" ></ input> Include current post categories<hr />
+<input type=checkbox id="chkIncludeCats" name="chkIncludeCats" ></ input> Include current post categories <br />
+<input type=checkbox id="chkRequireAllCats" name="chkRequireAllCats" ></ input> Require all selected categories
+<hr />
 
 <?php
 	$l = count($catList);
@@ -436,7 +487,9 @@ Parent: <select id="cboParent" style="width:110px;">
 
 <div style="overflow:scroll; overflow-x:hidden; height:150px; width:239px; border:ridge; padding-left:10px; float:left; margin-right:20px"  class="noneHide">
 <h3 align='center'>Tags</h3>
-<input type=checkbox id="chkIncludeTags" name="chkIncludeTags" ></ input> Include current post tags<hr />
+<input type=checkbox id="chkIncludeTags" name="chkIncludeTags" ></ input> Include current post tags <br />
+<input type=checkbox id="chkRequireAllTags" name="chkRequireAllTags" ></ input> Require all selected tags
+<hr />
 <?php
 	$l = count($tagList);
 	for($i=0; $i<$l; $i++){//build our list of cats
@@ -455,18 +508,18 @@ Parent: <select id="cboParent" style="width:110px;">
 <br/><br/>
 
 
-<p>Before list HTML: <textarea rows='3' cols='200' name='txtBeforeList' id='txtBeforeList' value=''  class="txtHeader"></textarea></p><br/><br/><br/></span>
+<p>Before list HTML: <textarea rows='4' cols='200' name='txtBeforeList' id='txtBeforeList' value=''  class="txtHeader"></textarea></p><br/><br/><br/></span>
 
 <p>List item content: 
 
-<textarea name='txtContent' id='txtContent' rows='3' cols="200" class="txtHeader"></textarea>
+<textarea name='txtContent' id='txtContent' rows='4' cols="200" class="txtHeader"></textarea>
 
 </p>
 
 <span  class="noneHide">
 <br/><br/><br/>
 
-<p>After list HTML: <textarea rows='3' cols='200' name='txtAfterList' id='txtAfterList'  class="txtHeader noneHide"></textarea></p>
+<p>After list HTML: <textarea rows='4' cols='200' name='txtAfterList' id='txtAfterList'  class="txtHeader noneHide"></textarea></p>
 
 <br/><br/><br/>
 
@@ -475,15 +528,17 @@ Parent: <select id="cboParent" style="width:110px;">
 </span><br/><br/>
 
 <p>
-<button id="btnSavePreset">Save to Preset</button>&nbsp;&nbsp;:&nbsp;&nbsp;<input type="text" size='30' name='txtPresetName' id='txtPresetName' value='<?php echo $adminOptions["default_preset"]; ?>' ></input>
+<button id="btnSavePreset">Save to Preset</button>&nbsp;&nbsp;:&nbsp;&nbsp;<input type="text" size='30' name='txtPresetName' id='txtPresetName' value='<?php echo $adminOptions["default_preset"]; ?>' ></input>&nbsp;&nbsp;&nbsp;&nbsp;<input type=checkbox id="chkShowPreview" name="chkShowPreview" checked="yes"></ input> show preview
 </p>
 
 <p><span id="createStatus">&nbsp;</span></p>
 
 <p>
-<span id="outputSpan">
-<textarea name='txtOutput' id='txtOutput' rows='6' cols="86">output goes here</textarea>
-</span>
+	<div style="width:700px; padding:10px">
+		<div id="previewDiv">
+        	Preview will appear here when saved</span>
+		</div>  
+	</div>
 </p>
 
 <p>
@@ -519,10 +574,17 @@ Parent: <select id="cboParent" style="width:110px;">
         <li><b>[guid]</b> - original URL of the page/post (post_permalink is probably better)</li>
         <li><b>[comment_count]</b> - number of comments posted for this post/page</li>
 
-        <li><b>[item_number offset="1"]</b> - the list index for each page/post (offset parameter sets start position)</li>
+        <li><b>[item_number offset="1" increment="1"]</b> - the list index for each page/post. Offset parameter sets start position. Increment sets the number you want to increase on each loop.</li>
         <li><b>[final_end]</b> - on the final list item, everything after this shortcode will be excluded. This will allow you to have commas (or anything else) after each item except the last one.</li>
         <li><b>[post_pdf]</b> - URL to the page/post's PDF file. (Requires Kalin's PDF Creation Station plugin. See help menu for more info.)</li>
+        
+        <li><b>[post_meta name="custom_field_name"]</b> - page/post custom field value. Correct 'name' parameter required</li>
+        <li><b>[post_tags delimeter=", " links="true"]</b> - post tags list. Optional 'delimiter' parameter sets separator text. Use optional 'links' parameter to turn off links to tag pages</li>
+        <li><b>[post_categories delimeter=", " links="true"]</b> - post categories list. Parameters work like tag shortcode.</li>
+        <li><b>[post_parent link="true"]</b> - post parent. Use optional 'link' parameter to turn off link</li>
+        <li><b>[post_comments before="" after=""]</b> - post comments. Parameters represent text/HTML that will be inserted before and after comment list but will not be displayed if there are no comments. PHP coders: <a href="http://kalinbooks.com/2011/customize-comments-pdf-creation-station">learn how to customize comment display.</a></li>
         <li><b>[post_thumb]</b> - URL to the page/post's featured image (requires theme support)</li>
+        <li><b>[php_function name="function_name" param=""]</b> - call a user-defined custom function. Refer to <a href="http://kalinbooks.com/2011/custom-php-functions/">this blog post</a> for instructions.</li>
         </ul></p>
         <p><b>*</b> Time shortcodes have an optional format parameter. Format your dates using these possible tokens: m=month, M=text month, F=full text month, d=day, D=short text Day Y=4 digit year, y=2 digit year, H=hour, i=minute, s=seconds. More tokens listed here: <a href="http://php.net/manual/en/function.date.php" target="_blank">http://php.net/manual/en/function.date.php.</a> </p>
         <p>Note: these shortcodes only work in the List item content box on this page.</p>
