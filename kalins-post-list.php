@@ -42,6 +42,7 @@ function kalinsPost_admin_page() {//load php that builds our admin page
 function kalinsPost_admin_init(){
 	//add_action('contextual_help', 'kalinsPost_contextual_help', 10, 3);
 	
+	
 	register_deactivation_hook( __FILE__, 'kalinsPost_cleanup' );
 	
 	/*
@@ -174,7 +175,15 @@ function kalinsPost_contextual_help($contextual_help, $screen_id, $screen) {
 	if($screen_id == $kalinsPost_hook){
 		//$contextual_help = __FILE__;//DOMDocument::loadHTMLFile("kalins_post_admin_help.html");//require_once( WP_PLUGIN_DIR . '/kalins-post-list/kalins_post_admin_help.php');
 		
-		$helpFile = DOMDocument::loadHTMLFile(WP_PLUGIN_DIR . '/kalins-post-list/kalins_post_admin_help.html');
+		try {
+			$helpFile = DOMDocument::loadHTMLFile(WP_PLUGIN_DIR . '/kalins-post-list/kalins_post_admin_help.html');
+		} catch (Exception $e) {
+			
+			return "what?";
+			
+			$contextual_help = "Failed to display the help menu because there appears to be an issue with XML support in your PHP installation. Instead, view the <a href='http://kalinbooks.com/post-list-wordpress-plugin/post-list-help-menu'>Post List help page on my website.</a>";
+		}
+		
 		$contextual_help = $helpFile->saveHTML();
 	}
 	return $contextual_help;
@@ -448,9 +457,11 @@ class KalinsPostCallback{//class used just for all the preg_replace_callback fun
 			return ' Error: injected PHP function must have a name. ';
 		}
 		
+		
 		global $post;
 		$post = $this->page;
 		query_posts('p=' .$this->page->ID);//set global post object and post data so custom function has access to it
+		
 		
 		if($matches[4]){
 			return call_user_func($matches[2], $matches[4]);
@@ -528,8 +539,12 @@ function kalinsPost_execute($preset) {
 			$newVals->numberposts = -1;
 		}
 		
+		//return '--------------------numberposts=' .$newVals->numberposts .'&category=' .$catString .'&post_type=' .$newVals->post_type .'&tag=' .$tagString .'&orderby=' .$newVals->orderby .'&order=' .$newVals->order .'&exclude=' .$excludeList .'&post_parent=' .$newVals->post_parent;
+		
 		$posts = get_posts('numberposts=' .$newVals->numberposts .'&category=' .$catString .'&post_type=' .$newVals->post_type .'&tag=' .$tagString .'&orderby=' .$newVals->orderby .'&order=' .$newVals->order .'&exclude=' .$excludeList .'&post_parent=' .$newVals->post_parent);
 		
+		//$args = array('orderby' => 'name');
+		//$posts = query_posts("orderby=tax_query");
 		
 		if($newVals->requireAllCats == "true"){//if every post must lie in every selected category
 			$requiredCats = explode(",", $newVals->categories);//create array from list of categories
