@@ -99,6 +99,13 @@ Note: May require PHP 5.2 and Wordpress 3.1 (hasn't been tested on older version
 *added 'require all selected tags/categories' option, which allows you to require that every post include all the cats or tags you've selected
 *added php_function shortcode to allow custom PHP injection
 
+= 3.1 =
+*removed both name and category order-by options, because they don't work anymore due to changes in the WordPress core. I'm hoping eventually to write a manual sort function and add these back in
+*removed contextual help and added a link to the same help page on my website. this help menu was causing a problem with a small number of users who had XML support issues in their PHP installation. The help page is still available in the plugin source files
+*added [post_content] shortcode back into the documentation after I accidentally deleted it
+*removed global $post object from comments callback. Fixes bug where an extra post was being added to the page when this shortcode was used
+*Did same thing for php_function callback to fix the same issue. using php_function now requires you to pass in the necessary information through the shortcode parameter
+
 == Upgrade Notice ==
 
 = 0.7 =

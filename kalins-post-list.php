@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Kalin's Post List
-Version: 3.0
+Version: 3.1
 Plugin URI: http://kalinbooks.com/post-list-wordpress-plugin/
-Description: Creates a shortcode or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.
+Description: Creates a shortcode, widget, or PHP snippet for inserting dynamic, highly customizable lists of posts or pages such as related posts or table of contents into your post content or theme.
 Author: Kalin Ringkvist
 Author URI: http://kalinbooks.com/
 
@@ -152,7 +152,7 @@ function kalinsPost_configure_pages() {
 	global $kalinsPost_hook;
 	$kalinsPost_hook = add_submenu_page('options-general.php', "Kalin's Post List", "Kalin's Post List", 'manage_options', "Kalins-Post-List", 'kalinsPost_admin_page');
 	add_action( "admin_print_scripts-$kalinsPost_hook", 'kalinsPost_admin_head' );
-	add_filter('contextual_help', 'kalinsPost_contextual_help', 10, 3);
+	//add_filter('contextual_help', 'kalinsPost_contextual_help', 10, 3);
 }
 
 function kalinsPost_admin_head() {
@@ -170,7 +170,7 @@ function kalinsPost_inner_custom_box($post) {//creates the box that goes on the 
 	require_once( WP_PLUGIN_DIR . '/kalins-edit-links/kalinsPost_custom_box.php');
 }
 
-function kalinsPost_contextual_help($contextual_help, $screen_id, $screen) {
+/*function kalinsPost_contextual_help($contextual_help, $screen_id, $screen) {
 	global $kalinsPost_hook;
 	if($screen_id == $kalinsPost_hook){
 		//$contextual_help = __FILE__;//DOMDocument::loadHTMLFile("kalins_post_admin_help.html");//require_once( WP_PLUGIN_DIR . '/kalins-post-list/kalins_post_admin_help.php');
@@ -187,7 +187,7 @@ function kalinsPost_contextual_help($contextual_help, $screen_id, $screen) {
 		$contextual_help = $helpFile->saveHTML();
 	}
 	return $contextual_help;
-}
+}*/
 
 function kalinsPost_get_admin_options() {
 	$kalinsPostAdminOptions = kalinsPost_getAdminSettings();
@@ -244,6 +244,7 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 	
 	$postCallback = new KalinsPostCallback;
 	$postCallback->itemCount = $count;
+	$postCallback->page = $page;
 	
 	$str = preg_replace_callback('#\[ *item_number *(offset=[\'|\"]([^\'\"]*)[\'|\"])? *(increment=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postCountCallback'), $str);
 	
@@ -257,12 +258,20 @@ function kalinsPostinternalShortcodeReplace($str, $page, $count){
 	$str = preg_replace_callback('#\[ *post_modified_gmt *(format=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postDateCallback'), $str);
 	
 	if(preg_match('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', $str)){
-		if($page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
-			$postCallback->pageContent = strip_tags($page->post_content);
+		
+		
+		
+		$str = preg_replace_callback('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postExcerptCallback'), $str);
+		
+		/*if($page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
+			//$postCallback->pageContent = strip_tags($page->post_content);
 			$str = preg_replace_callback('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postExcerptCallback'), $str);
 		}else{//if there is a post excerpt just use it and don't generate our own
 			$str = preg_replace('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', $page->post_excerpt, $str);
-		}
+		}*/
+		
+		
+		
 	}
 	
 	$postCallback->post_type = $page->post_type;
@@ -298,17 +307,42 @@ class KalinsPostCallback{//class used just for all the preg_replace_callback fun
 	}
 	
 	function postExcerptCallback($matches){
-		if(isset($matches[2])){
-			$exLength = intval($matches[2]);
-		}else{
-			$exLength = 250;
+		
+		
+		$pageContent = strip_tags($this->page->post_content);
+		//return "blah" .$exLength;
+		if($this->page->post_excerpt == ""){//if there's no excerpt applied to the post, extract one
+			//$postCallback->pageContent = strip_tags($page->post_content);
+			//$str = preg_replace_callback('#\[ *post_excerpt *(length=[\'|\"]([^\'\"]*)[\'|\"])? *\]#', array(&$postCallback, 'postExcerptCallback'), $str);
+			
+			if(isset($matches[2])){
+				$exLength = intval($matches[2]);
+			}else{
+				$exLength = 250;
+			}
+			
+			//return "blah";
+			
+			if(strlen($pageContent) > $exLength){
+				return strip_shortcodes(substr($pageContent, 0, $exLength)) ."...";//clean up and return excerpt
+			}else{
+				return strip_shortcodes($pageContent);
+			}
+			
+		}else{//if there is a post excerpt just use it and don't generate our own
+			/*if(isset($matches[2])){//uncomment this if/else statement if you want the manual excerpt to be trimmed to the passed in length
+				$exLength = intval($matches[2]);
+				return substr($this->page->post_excerpt, 0, $exLength);
+			}else{
+				return $this->page->post_excerpt;
+			}*/
+			return $this->page->post_excerpt;
 		}
 		
-		if(strlen($this->pageContent) > $exLength){
-			return strip_shortcodes(substr($this->pageContent, 0, $exLength)) ."...";//clean up and return excerpt
-		}else{
-			return strip_shortcodes($this->pageContent);
-		}
+		
+		
+		
+		
 	}
 	
 	function postDateCallback($matches){
@@ -410,15 +444,17 @@ class KalinsPostCallback{//class used just for all the preg_replace_callback fun
 	
 	function commentCallback($matches) {
 		
+		/*
 		global $post;
 		$post = $this->page;//set global post object just for comments
 		query_posts('p=' .$this->page->ID);//for some reason this is also necessary so other plugins have access to values normally inside The Loop
+		*/
 		
 		if(defined("KALINS_PDF_COMMENT_CALLBACK")){
 			return call_user_func(KALINS_PDF_COMMENT_CALLBACK);
 		}
 		
-		$comments = get_comments('status=approve&post_id=' .$post->ID);
+		$comments = get_comments('status=approve&post_id=' .$this->page->ID);
 		$commentString = $matches[2];
 		
 		foreach($comments as $comment) {
@@ -454,19 +490,19 @@ class KalinsPostCallback{//class used just for all the preg_replace_callback fun
 		}
 		
 		if(!$matches[2]){
-			return ' Error: injected PHP function must have a name. ';
+			return ' Error: injected PHP function must have a name. Add a name parameter to your php_function shortcode. ';
 		}
 		
-		
+		/*
 		global $post;
 		$post = $this->page;
 		query_posts('p=' .$this->page->ID);//set global post object and post data so custom function has access to it
-		
+		*/
 		
 		if($matches[4]){
-			return call_user_func($matches[2], $matches[4]);
+			return call_user_func($matches[2], $this->page, $matches[4]);
 		}else{
-			return call_user_func($matches[2]);
+			return call_user_func($matches[2], $this->page);
 		}
 	}
 }

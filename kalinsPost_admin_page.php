@@ -394,7 +394,9 @@
 
 <h3>by Kalin Ringkvist - <a href="http://kalinbooks.com/">KalinBooks.com</a></h3>
 
-<p><a href="http://kalinbooks.com/post-list-wordpress-plugin/">Plugin Page</a></p>
+<p><h3><a href="http://kalinbooks.com/post-list-wordpress-plugin/">Plugin Page</a></h3></p>
+
+<p><h3><a href="http://kalinbooks.com/post-list-wordpress-plugin/kalins-post-list-help/">Help and instructions</a></h3></p>
 
 <br/><hr/><br/>
 
@@ -425,20 +427,12 @@ Show count: <input type="text" size='5' name='txtNumberposts' id='txtNumberposts
 Order by: <select id="cboOrderby" style="width:110px;">
 <option value="post_date">post date</option>
 <option value="author">author ID</option>
-<option value="category">category ID</option>
-<option value="content">content</option>
-<option value="date">date</option>
 <option value="ID">post ID</option>
 <option value="menu_order">menu_order</option>
-<option value="mime_type">mime_type</option>
 <option value="modified">modified date</option>
-<option value="name">name</option>
 <option value="parent">parent</option>
-<option value="password">password</option>
 <option value="rand">random</option>
-<option value="status">status</option>
 <option value="title">title</option>
-<option value="type">type</option>
 </select>
 
 <select id="cboOrder" style="width:110px;">
@@ -567,6 +561,7 @@ Parent: <select id="cboParent" style="width:110px;">
         <li><b>[post_date format="m-d-Y"]</b> - date page/post was created <b>*</b></li>
         <li><b>[post_date_gmt format="m-d-Y"]</b> - date page/post was created in gmt time <b>*</b></li>
         <li><b>[post_title]</b> - page/post title</li>
+        <li><b>[post_content]</b> - page/post content</li>
         <li><b>[post_excerpt length="250"]</b> - page/post excerpt (note the optional character 'length' parameter)</li>
         <li><b>[post_name]</b> - page/post slug name</li>
         <li><b>[post_modified format="m-d-Y"]</b> - date page/post was last modified <b>*</b></li>
