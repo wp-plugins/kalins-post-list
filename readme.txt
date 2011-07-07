@@ -95,7 +95,7 @@ Note: May require PHP 5.2 and Wordpress 3.1 (hasn't been tested on older version
 *added post_meta shortcode for post's custom fields
 *save function now fails gracefully if you forget to enter a preset name
 *shortcodes placed into 'before' and 'after' textfields now convert, based on the current page
-*added increment param to item_number shortcode for counting by something other than 1
+*added increment param to item_number shortcode for counting by something other than 1 
 *added 'require all selected tags/categories' option, which allows you to require that every post include all the cats or tags you've selected
 *added php_function shortcode to allow custom PHP injection
 
